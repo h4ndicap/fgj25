@@ -1,5 +1,5 @@
 import { fromEvent } from "rxjs";
-import { CircleGeometry, Color, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Vector3 } from "three";
+import { CircleGeometry, Color, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Texture, Vector3 } from "three";
 import { IUpdateable } from "./common";
 
 
@@ -10,6 +10,8 @@ export class Player extends Object3D implements IUpdateable {
     private _inputsActive = new Set<InputAction>()
 
     private _playerGraphics = new Mesh(new PlaneGeometry())
+
+    private _playerMaterial = new MeshBasicMaterial();
 
     private _shadow = new Mesh(new CircleGeometry())
 
@@ -24,11 +26,15 @@ export class Player extends Object3D implements IUpdateable {
 
     maxSpeed = 1 * this._movementScaling;
 
+    normalizedSpeed = 0;
+
     constructor() {
         super();
-        this.add(this._playerGraphics);
+        this._playerMaterial.transparent = true;
+        this._playerGraphics.material = this._playerMaterial;
         this._playerGraphics.position.y += 0.5
-        this.add(this._shadow);
+        this.add(this._playerGraphics);
+
         this._shadow.rotateX(Math.PI / 2)
         this._shadow.material = new MeshBasicMaterial({
             opacity: 0.5,
@@ -36,6 +42,7 @@ export class Player extends Object3D implements IUpdateable {
             transparent: true
         })
         this._shadow.scale.setScalar(0.35)
+        this.add(this._shadow);
         // console.log("player");
         fromEvent<KeyboardEvent>(document, 'keydown').subscribe((key) => {
             switch (key.code) {
@@ -85,7 +92,15 @@ export class Player extends Object3D implements IUpdateable {
         this.position.add(this._movementVector);
         const movementExcess = this._movementVector.clone().multiplyScalar(10)
         this.worldTarget.copy(this.position).add(movementExcess)
+
+        this._playerGraphics.position.y = 1 + this.normalizedSpeed * 0.25 + Math.sin(_timePassed * 0.5) * 0.2 + Math.cos(_timePassed * 3.25) * 0.1;
+        // this._playerGraphics.position.x = Math.cos(_timePassed * 6.5) * 0.2;
         // console.log(...this._movementVector)
+        if (this._movementVector.x > 0) {
+            this._playerGraphics.scale.x = -1;
+        } else {
+            this._playerGraphics.scale.x = 1;
+        }
     }
 
     private updateMovementVector(delta: number) {
@@ -133,9 +148,9 @@ export class Player extends Object3D implements IUpdateable {
         }
 
         // how close we are to max speed? no need to completely clamp for simplicity
-        const movementPhase = this._movementVector.length() / this.maxSpeed
-        if (movementPhase >= 1) {
-            this._movementVector.divideScalar(movementPhase);
+        this.normalizedSpeed = this._movementVector.length() / this.maxSpeed
+        if (this.normalizedSpeed >= 1) {
+            this._movementVector.divideScalar(this.normalizedSpeed);
         }
         // console.log(movementPhase);
 
@@ -151,6 +166,10 @@ export class Player extends Object3D implements IUpdateable {
         // const vec = new 
         this._playerGraphics.lookAt(cameraPos);
         this._playerGraphics.rotateY(Math.PI)
+    }
+
+    setTextures(idle: Texture) {
+        this._playerMaterial.map = idle;
     }
 
 }

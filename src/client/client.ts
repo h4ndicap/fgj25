@@ -32,6 +32,9 @@ function updateLoop() {
 }
 // updateLoop()
 
-assetManager.loadTextures(imageFiles).then(() => updateLoop()).catch(() => {
+assetManager.loadTextures(imageFiles).then(() => {
+    currentLevel.player.setTextures(assetManager.getTexture('hahmo.png')!)
+    updateLoop()
+}).catch(() => {
     console.error("Could not load files!!")
 });
