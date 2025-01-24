@@ -1,4 +1,4 @@
-import { Scene, WebGLRenderer } from "three"
+import { Vector3, WebGLRenderer } from "three"
 // import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { CameraRig } from "./cameraRig";
 import { Level } from "./level";
@@ -43,6 +43,8 @@ export class RenderingManager implements IUpdateable {
         // level.add(this.cameraRig);
         this._cameraRig.update(delta, time)
         if (this._targetLevel) {
+            this._cameraRig.targetVector.copy(this._targetLevel.player.worldTarget)
+            this._targetLevel.player.setCameraLookat(this._cameraRig.camera.getWorldPosition(new Vector3()))
             this._renderer.render(this._targetLevel.scene, this._cameraRig.camera);
         }
     }
