@@ -1,5 +1,5 @@
 import { fromEvent } from "rxjs";
-import { CircleGeometry, Color, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Texture, Vector3 } from "three";
+import { AxesHelper, CircleGeometry, Color, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Texture, Vector3 } from "three";
 import { IUpdateable } from "./common";
 
 
@@ -9,8 +9,9 @@ export class Player extends Object3D implements IUpdateable {
 
     private _inputsActive = new Set<InputAction>()
 
+    private _playerPivot = new AxesHelper();
     private _playerGraphics = new Mesh(new PlaneGeometry())
-    private _playerGraphicsOffset = new Vector3(0.135, 1, 0.)
+    private _playerGraphicsOffset = new Vector3(0.12, 0.25, 0.01)
 
     private _playerMaterial = new MeshBasicMaterial();
 
@@ -19,6 +20,8 @@ export class Player extends Object3D implements IUpdateable {
     private _movementVector = new Vector3();
 
     worldTarget = new Vector3();
+
+    private _cameraPos = new Vector3();
 
     private _movementScaling = 0.07;
 
@@ -31,18 +34,22 @@ export class Player extends Object3D implements IUpdateable {
 
     constructor() {
         super();
+        this.add(this._playerPivot);
+        this._playerPivot.position.y = 1
+        this._playerPivot.add(this._playerGraphics)
         this._playerMaterial.transparent = true;
         this._playerGraphics.material = this._playerMaterial;
         this._playerGraphics.position.copy(this._playerGraphicsOffset)
-        this.add(this._playerGraphics);
+        // this.add(this._playerGraphics);
 
         this._shadow.rotateX(Math.PI / 2)
         this._shadow.material = new MeshBasicMaterial({
-            opacity: 0.5,
+            opacity: 0.25,
             color: new Color(0, 0, 0),
             transparent: true
         })
         this._shadow.scale.setScalar(0.35)
+        this._shadow.scale.y = 0.2
         this.add(this._shadow);
         // console.log("player");
         fromEvent<KeyboardEvent>(document, 'keydown').subscribe((key) => {
@@ -94,16 +101,20 @@ export class Player extends Object3D implements IUpdateable {
         const movementExcess = this._movementVector.clone().multiplyScalar(10)
         this.worldTarget.copy(this.position).add(movementExcess)
 
-        this._playerGraphics.position.y = this._playerGraphicsOffset.y + this.normalizedSpeed * 0.25 + Math.sin(_timePassed * 0.5) * 0.2 + Math.cos(_timePassed * 5.25) * 0.1;
+        this._playerPivot.position.y = 1 + this.normalizedSpeed * 0.25 + Math.sin(_timePassed * 0.5) * 0.2 + Math.cos(_timePassed * 5.25) * 0.1;
         // this._playerGraphics.position.x = Math.cos(_timePassed * 6.5) * 0.2;
         // console.log(...this._movementVector)
+
+        // this._playerGraphics.rotation.y = 1
         if (this._movementVector.x > 0) {
-            this._playerGraphics.scale.x = -1;
-            this._playerGraphics.position.x = -this._playerGraphicsOffset.x
+            this._playerPivot.scale.x = -1;
         } else {
-            this._playerGraphics.scale.x = 1;
-            this._playerGraphics.position.x = this._playerGraphicsOffset.x
+            this._playerPivot.scale.x = 1;
         }
+        this._playerPivot.lookAt(this._cameraPos);
+        this._playerPivot.rotateY(Math.PI)
+        this._playerPivot.rotateX(-0.4)
+        this._playerPivot.rotation.z = Math.sin(_timePassed * 1.7) * 0.17;
     }
 
     private updateMovementVector(delta: number) {
@@ -167,8 +178,9 @@ export class Player extends Object3D implements IUpdateable {
     setCameraLookat(cameraPos: Vector3) {
         // console.log(cameraPos);
         // const vec = new 
-        this._playerGraphics.lookAt(cameraPos);
-        this._playerGraphics.rotateY(Math.PI)
+        this._cameraPos.copy(cameraPos);
+
+        // this._playerGraphics.rotateZ()
     }
 
     setTextures(idle: Texture) {
