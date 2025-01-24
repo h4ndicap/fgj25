@@ -1,5 +1,5 @@
 import { fromEvent } from "rxjs";
-import { BoxGeometry, Mesh, Object3D, Vector3 } from "three";
+import { CircleGeometry, Color, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Vector3 } from "three";
 import { IUpdateable } from "./common";
 
 
@@ -9,7 +9,9 @@ export class Player extends Object3D implements IUpdateable {
 
     private _inputsActive = new Set<InputAction>()
 
-    private _playerGraphics = new Mesh(new BoxGeometry())
+    private _playerGraphics = new Mesh(new PlaneGeometry())
+
+    private _shadow = new Mesh(new CircleGeometry())
 
     private _movementVector = new Vector3();
 
@@ -21,7 +23,16 @@ export class Player extends Object3D implements IUpdateable {
     constructor() {
         super();
         this.add(this._playerGraphics);
-        console.log("player");
+        this._playerGraphics.position.y += 0.5
+        this.add(this._shadow);
+        this._shadow.rotateX(Math.PI / 2)
+        this._shadow.material = new MeshBasicMaterial({
+            opacity: 0.5,
+            color: new Color(0, 0, 0),
+            transparent: true
+        })
+        this._shadow.scale.setScalar(0.35)
+        // console.log("player");
         fromEvent<KeyboardEvent>(document, 'keydown').subscribe((key) => {
             switch (key.code) {
                 case 'KeyA':
@@ -60,14 +71,15 @@ export class Player extends Object3D implements IUpdateable {
             }
         })
     }
-    update(delta: number, timePassed: number): void {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    update(delta: number, _timePassed: number): void {
         // throw new Error("Method not implemented.");
         if (this._inputsActive.size > 0) {
             // console.log(...this._inputsActive.keys())
         }
         this.updateMovementVector(delta);
         this.position.add(this._movementVector);
-        console.log(...this._movementVector)
+        // console.log(...this._movementVector)
     }
 
     private updateMovementVector(delta: number) {

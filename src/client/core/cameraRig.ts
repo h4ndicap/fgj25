@@ -6,7 +6,7 @@ export class CameraRig extends Object3D implements IUpdateable {
     private _azimuth = new Object3D();
     private _polar = new Object3D();
     private _dolly = new Object3D();
-    camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
+    camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100)
 
     constructor() {
         super();
@@ -15,8 +15,8 @@ export class CameraRig extends Object3D implements IUpdateable {
         this._polar.add(this._azimuth);
         this._azimuth.add(this._dolly);
         this._polar.rotation.y = Math.PI
-        this._azimuth.rotation.x = -1
-        this._dolly.position.z = 5;
+        this._azimuth.rotation.x = -1.2
+        this._dolly.position.z = 20;
         // this.camera.position.z = -5
         this._dolly.add(this.camera)
 

@@ -7,12 +7,13 @@ const clock = new THREE.Clock();
 
 const renderingManager = new RenderingManager();
 
-let currentLevel: Level;
 const levels: Level[] = [];
 
 levels.push(new Level())
 
-currentLevel = levels[0]
+let currentLevel: Level = levels[0];
+
+renderingManager.level = currentLevel;
 
 function updateLoop() {
     const delta = clock.getDelta()
@@ -20,7 +21,7 @@ function updateLoop() {
     if (currentLevel !== undefined) {
         // console.log("update")
         currentLevel.update(delta, elapsed)
-        renderingManager.render(currentLevel.scene, delta, elapsed)
+        renderingManager.update(delta, elapsed)
     }
     requestAnimationFrame(updateLoop)
 }
