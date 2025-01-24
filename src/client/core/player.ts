@@ -10,6 +10,7 @@ export class Player extends Object3D implements IUpdateable {
     private _inputsActive = new Set<InputAction>()
 
     private _playerGraphics = new Mesh(new PlaneGeometry())
+    private _playerGraphicsOffset = new Vector3(0.135, 1, 0.)
 
     private _playerMaterial = new MeshBasicMaterial();
 
@@ -32,7 +33,7 @@ export class Player extends Object3D implements IUpdateable {
         super();
         this._playerMaterial.transparent = true;
         this._playerGraphics.material = this._playerMaterial;
-        this._playerGraphics.position.y += 0.5
+        this._playerGraphics.position.copy(this._playerGraphicsOffset)
         this.add(this._playerGraphics);
 
         this._shadow.rotateX(Math.PI / 2)
@@ -93,13 +94,15 @@ export class Player extends Object3D implements IUpdateable {
         const movementExcess = this._movementVector.clone().multiplyScalar(10)
         this.worldTarget.copy(this.position).add(movementExcess)
 
-        this._playerGraphics.position.y = 1 + this.normalizedSpeed * 0.25 + Math.sin(_timePassed * 0.5) * 0.2 + Math.cos(_timePassed * 3.25) * 0.1;
+        this._playerGraphics.position.y = this._playerGraphicsOffset.y + this.normalizedSpeed * 0.25 + Math.sin(_timePassed * 0.5) * 0.2 + Math.cos(_timePassed * 5.25) * 0.1;
         // this._playerGraphics.position.x = Math.cos(_timePassed * 6.5) * 0.2;
         // console.log(...this._movementVector)
         if (this._movementVector.x > 0) {
             this._playerGraphics.scale.x = -1;
+            this._playerGraphics.position.x = -this._playerGraphicsOffset.x
         } else {
             this._playerGraphics.scale.x = 1;
+            this._playerGraphics.position.x = this._playerGraphicsOffset.x
         }
     }
 

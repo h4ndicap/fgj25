@@ -12,6 +12,8 @@ export class CameraRig extends Object3D implements IUpdateable {
 
     followSpeed = 10;
 
+    groundOffset = 0.1;
+
     constructor() {
         super();
 
@@ -20,7 +22,7 @@ export class CameraRig extends Object3D implements IUpdateable {
         this._azimuth.add(this._dolly);
         this._polar.rotation.y = Math.PI
         this._azimuth.rotation.x = -1.00
-        this._dolly.position.z = 4;
+        this._dolly.position.z = 3;
         // this.camera.position.z = -5
         this._dolly.add(this.camera)
 
@@ -34,6 +36,7 @@ export class CameraRig extends Object3D implements IUpdateable {
         const intermediateVector = new Vector3().lerpVectors(this.position, this.targetVector, delta * this.followSpeed);
 
         this.position.copy(intermediateVector);
+        this.position.y += this.groundOffset;
 
     }
 
