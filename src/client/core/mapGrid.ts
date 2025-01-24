@@ -1,14 +1,14 @@
-import { BoxGeometry, Color, LineBasicMaterial, LineSegments, Mesh, Object3D, WireframeGeometry } from "three";
+import { AxesHelper, BoxGeometry, Color, LineBasicMaterial, LineSegments, Object3D, WireframeGeometry } from "three";
 
 export class MapTile extends Object3D {
 
     private _helper: LineSegments;
-    private _helperMaterial = new LineBasicMaterial();
 
     // private _ground = new Mesh(new BoxGeometry(1, 0.1, 1))
 
     constructor(x: number, y: number) {
         super();
+
         const wireBox = new BoxGeometry();
         const wire = new WireframeGeometry(wireBox);
         this._helper = new LineSegments(wire);
@@ -16,7 +16,7 @@ export class MapTile extends Object3D {
             color: new Color(x % 2 > 0 ? 0.7 : 0.2, y % 2 > 0 ? 0.7 : 0.2, 0)
         });
         this._helper.scale.y = 0.1
-        this._helper.material.depthTest = false;
+        // this._helper.material.depthTest = false;
         this._helper.material.opacity = 0.75;
         this._helper.material.transparent = true;
 
@@ -30,6 +30,7 @@ export class MapGrid extends Object3D {
 
     constructor(size: number) {
         super();
+        this.add(new AxesHelper(3))
         for (let x = 0; x < size; x++) {
             // console.log(this.tiles[x])
             this.tiles[x] = [];

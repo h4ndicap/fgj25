@@ -15,9 +15,12 @@ levels.push(new Level())
 currentLevel = levels[0]
 
 function updateLoop() {
+    const delta = clock.getDelta()
+    const elapsed = clock.getElapsedTime();
     if (currentLevel !== undefined) {
         // console.log("update")
-        renderingManager.render(currentLevel.scene, clock.getDelta(), clock.getElapsedTime())
+        currentLevel.update(delta, elapsed)
+        renderingManager.render(currentLevel.scene, delta, elapsed)
     }
     requestAnimationFrame(updateLoop)
 }

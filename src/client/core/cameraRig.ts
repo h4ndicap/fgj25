@@ -1,7 +1,8 @@
 import { Object3D, PerspectiveCamera } from "three";
+import { IUpdateable } from "./common";
 
 
-export class CameraRig extends Object3D {
+export class CameraRig extends Object3D implements IUpdateable {
     private _azimuth = new Object3D();
     private _polar = new Object3D();
     private _dolly = new Object3D();
@@ -13,18 +14,17 @@ export class CameraRig extends Object3D {
         this.add(this._polar);
         this._polar.add(this._azimuth);
         this._azimuth.add(this._dolly);
+        this._polar.rotation.y = Math.PI
         this._azimuth.rotation.x = -1
         this._dolly.position.z = 5;
         // this.camera.position.z = -5
         this._dolly.add(this.camera)
+
+        // found it nicer to flip the world view this way :D
+        this.camera.scale.x = -1
     }
 
     update(delta: number, time?: number) {
-        // this.camera.position.copy(this._dolly.position);
-        if (time) {
-            // this.position.x = (Math.sin(time))
-            // console.log(this.position.x)
-        }
     }
 
 }
