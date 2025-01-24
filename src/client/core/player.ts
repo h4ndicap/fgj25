@@ -15,10 +15,14 @@ export class Player extends Object3D implements IUpdateable {
 
     private _movementVector = new Vector3();
 
-    acceleration = 0.5;
-    deceleration = 0.5;
+    worldTarget = new Vector3();
 
-    maxSpeed = 0.2;
+    private _movementScaling = 0.07;
+
+    acceleration = 2 * this._movementScaling;
+    deceleration = 0.25 * this._movementScaling;
+
+    maxSpeed = 1 * this._movementScaling;
 
     constructor() {
         super();
@@ -79,6 +83,8 @@ export class Player extends Object3D implements IUpdateable {
         }
         this.updateMovementVector(delta);
         this.position.add(this._movementVector);
+        const movementExcess = this._movementVector.clone().multiplyScalar(10)
+        this.worldTarget.copy(this.position).add(movementExcess)
         // console.log(...this._movementVector)
     }
 
@@ -138,6 +144,13 @@ export class Player extends Object3D implements IUpdateable {
         // this._movementVector.z += delta * (this._inputsActive.has('up') ? 1 : 0)
         // this._movementVector.z += delta * (this._inputsActive.has('down') ? -1 : 0)
 
+    }
+
+    setCameraLookat(cameraPos: Vector3) {
+        // console.log(cameraPos);
+        // const vec = new 
+        this._playerGraphics.lookAt(cameraPos);
+        this._playerGraphics.rotateY(Math.PI)
     }
 
 }
