@@ -1,6 +1,9 @@
 import { fromEvent } from "rxjs";
-import { AxesHelper, CircleGeometry, Color, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Texture, Vector3 } from "three";
+import { AxesHelper, CircleGeometry, Color, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, SphereGeometry, Texture, Vector3 } from "three";
 import { IUpdateable } from "./common";
+import { RaycastManager } from "./raycastManager";
+import { Obstacle } from "./mapGrid";
+import { Level } from "./level";
 
 
 type InputAction = 'left' | 'right' | 'up' | 'down'
@@ -8,6 +11,8 @@ type InputAction = 'left' | 'right' | 'up' | 'down'
 export class Player extends Object3D implements IUpdateable {
 
     private _inputsActive = new Set<InputAction>()
+
+    obstacles: Object3D[] = []
 
     private _playerPivot = new AxesHelper();
     private _playerGraphics = new Mesh(new PlaneGeometry())
@@ -97,8 +102,15 @@ export class Player extends Object3D implements IUpdateable {
             // console.log(...this._inputsActive.keys())
         }
         this.updateMovementVector(delta);
+
+        const collisionTest = this.checkCollision();
+        if (collisionTest.hit) {
+            console.error("BÄNG")
+        }
         this.position.add(this._movementVector);
-        const movementExcess = this._movementVector.clone().multiplyScalar(10)
+
+        // effectively a helper for the camera
+        const movementExcess = this._movementVector.clone().multiplyScalar(30)
         this.worldTarget.copy(this.position).add(movementExcess)
 
         this._playerPivot.position.y = 1 + this.normalizedSpeed * 0.25 + Math.sin(_timePassed * 0.5) * 0.2 + Math.cos(_timePassed * 5.25) * 0.1;
@@ -175,6 +187,8 @@ export class Player extends Object3D implements IUpdateable {
 
     }
 
+
+
     setCameraLookat(cameraPos: Vector3) {
         // console.log(cameraPos);
         // const vec = new 
@@ -185,6 +199,30 @@ export class Player extends Object3D implements IUpdateable {
 
     setTextures(idle: Texture) {
         this._playerMaterial.map = idle;
+    }
+
+
+    // raycast from current position to target position, if hit, return true
+    checkCollision() {
+        const rm = RaycastManager.getInstance()
+        const results = rm.raycast(this.position, this.position.clone().add(this._movementVector), this.obstacles);
+        // result.
+        if (results.length > 0) {
+            console.log("POX", results)
+
+            const hitMark = new Mesh(new SphereGeometry())
+            hitMark.material = new MeshBasicMaterial({
+                color: new Color(1, 0, 0)
+            })
+            hitMark.position.copy(results[0].point)
+            hitMark.position.y = 2;
+            hitMark.scale.setScalar(0.01)
+            hitMark.scale.y = 1;
+
+            Level.current.scene.add(hitMark)
+
+        }
+        return { hit: false, normalVector: undefined }
     }
 
 }

@@ -1,4 +1,4 @@
-import { AxesHelper, BoxGeometry, Color, LineBasicMaterial, LineSegments, Object3D, WireframeGeometry } from "three";
+import { AxesHelper, BoxGeometry, Color, LineBasicMaterial, LineSegments, Mesh, Object3D, WireframeGeometry } from "three";
 
 export class MapTile extends Object3D {
 
@@ -25,8 +25,26 @@ export class MapTile extends Object3D {
     }
 }
 
+export class Obstacle extends Object3D {
+
+    private _collider;
+
+    get collider() {
+        return this._collider;
+    }
+
+    constructor() {
+        super();
+        this._collider = new Mesh(new BoxGeometry())
+        // this.helper
+        this.add(this._collider)
+    }
+
+}
+
 export class MapGrid extends Object3D {
     tiles: MapTile[][] = []
+    obstacleColliders: Object3D[] = [];
 
     constructor(size: number) {
         super();
@@ -43,6 +61,16 @@ export class MapGrid extends Object3D {
         }
     }
 
+    setObstacles(obstaclePositions: { x: number, y: number }[]) {
+        obstaclePositions.forEach(element => {
+            const newObstacle = new Obstacle();
+            const targetTile = this.tiles[element.x][element.y]
+            // newObstacle.position.x = element.x;
+            // newObstacle.position.z = element.y;
+            targetTile.add(newObstacle)
+            this.obstacleColliders.push(newObstacle.collider);
+        });
+    }
     getTile(x: number, y: number) {
         return this.tiles[x][y];
     }
