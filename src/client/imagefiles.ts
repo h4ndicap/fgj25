@@ -22,6 +22,8 @@ export const imageFiles: string[] = [
     'hahmoalotusruutu.png',
     'hahmoalotusruutu1.png',
     'hahmoalotusruutu2.png',
+    'pelinnimi.png',
+    'playbutton.png',
     // 'hahmoalotusruutu3.png'
 ]
 

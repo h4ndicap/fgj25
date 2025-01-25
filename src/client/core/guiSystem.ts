@@ -1,11 +1,14 @@
-import { BoxGeometry, Color, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneGeometry, Raycaster, Scene, Vector2 } from "three";
+import { BoxGeometry, Color, MathUtils, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneGeometry, Raycaster, Scene, Vector2 } from "three";
 import { IUpdateable } from "./common";
 import { AssetManager } from "./assetManager";
 
+export type UiState = 'mainmenu' | 'gamemenu'
 
 // an ugly super-static class for rendering UI whenever
 export class GuiSystem implements IUpdateable {
-    private frustumSize = 1;
+    private static frustumSize = 1;
+
+    static UISTATE: UiState = 'mainmenu'
     static orthoCam = new OrthographicCamera();
     // static camera = new CameraRig(true);
     static guiScene = new Scene();
@@ -21,6 +24,12 @@ export class GuiSystem implements IUpdateable {
 
     private static mainchar: Mesh;
     private static package: Mesh;
+    private static startButtonContainer = new Object3D();
+    private static startButton: Mesh;
+
+    private static startButtonScale = 1;
+
+    private static mainMenuSet: Object3D[] = []
     // static guiMap: any;
 
     private constructor() { }
@@ -32,9 +41,30 @@ export class GuiSystem implements IUpdateable {
             const intersects = GuiSystem.guiRaycaster.intersectObjects(GuiSystem.guiElements)
             if (intersects.length > 0) {
                 const action = GuiSystem.guiActions.get(intersects[0].object)
-                console.log(action)
+                // console.log(action)
+                if (action === 'start') {
+
+                    GuiSystem.startButtonScale += delta;
+
+                    console.log("start in scale");
+                    const current = GuiSystem.startButtonContainer.scale.y;
+                    GuiSystem.startButtonContainer.scale.addScalar(Math.max(current + delta, 1.2));
+
+                    // const newScalar = MathUtils.clamp(GuiSystem.startButton.scale.y, 
+                    // GuiSystem.startButton.scale.setScalar
+                }
+                else {
+                    GuiSystem.startButtonScale -= delta;
+                }
+            } else {
+                GuiSystem.startButtonScale -= delta;
             }
+
         }
+        GuiSystem.startButtonScale = MathUtils.clamp(GuiSystem.startButtonScale, 1, 1.2)
+        GuiSystem.startButtonContainer.scale.setScalar(GuiSystem.startButtonScale);
+        GuiSystem.startButtonContainer.scale.z = 1;
+
 
         GuiSystem.mainchar.rotation.z = Math.sin(timePassed * 0.3) * 0.15
         GuiSystem.package.position.y = Math.cos(5 + timePassed * 0.2) * 0.01
@@ -47,28 +77,8 @@ export class GuiSystem implements IUpdateable {
             return this.instance;
         }
         this.instance = new GuiSystem();
-        const cuubio = new Mesh(new BoxGeometry())
-        cuubio.material = new MeshBasicMaterial({
-            color: new Color(1, 0, 0)
-        })
-        // this.guiScene.add(cuubio);
-        cuubio.position.z = -10
         this.guiScene.add(this.orthoCam);
 
-        this.guiElements.push(cuubio);
-        this.guiActions.set(cuubio, 'asdfasdf')
-
-
-        const cuubio2 = new Mesh(new BoxGeometry())
-        cuubio2.material = new MeshBasicMaterial({
-            color: new Color(0, 1, 0)
-        })
-        // this.guiScene.add(cuubio2);
-        cuubio2.position.z = -10
-
-        this.guiElements.push(cuubio2);
-        this.guiActions.set(cuubio2, 'awefawefwef')
-        cuubio2.position.x += 1
         const bgScale = 1712 / 1000
         const mainMenuBackground = new Mesh(new PlaneGeometry());
         mainMenuBackground.material = new MeshBasicMaterial({
@@ -102,9 +112,43 @@ export class GuiSystem implements IUpdateable {
         this.package.position.z = -8
         // this.guiMap.set('owopack', mainMenuBackground2)
 
+
+        const gamename = new Mesh(new PlaneGeometry());
+        gamename.material = new MeshBasicMaterial({
+            map: AssetManager.getInstance().getTexture('pelinnimi.png'),
+            transparent: true
+        })
+        gamename.scale.setX(bgScale)
+        gamename.position.z = -7
+
+
+
+        this.startButton = new Mesh(new PlaneGeometry());
+        this.startButton.material = new MeshBasicMaterial({
+            map: AssetManager.getInstance().getTexture('playbutton.png'),
+            transparent: true
+        })
+        const startbuttonScale = 457 / 210
+        this.startButton.scale.setX(startbuttonScale)
+        this.startButton.scale.multiplyScalar(0.2)
+        this.startButtonContainer.position.z = -6
+        this.startButtonContainer.add(this.startButton);
+        this.startButtonContainer.position.x = 0.45
+        this.startButtonContainer.position.y = -0.25
+
         this.guiScene.add(mainMenuBackground)
         this.guiScene.add(this.package)
-        this.guiScene.add(GuiSystem.mainchar)
+        this.guiScene.add(this.mainchar)
+        this.guiScene.add(gamename)
+        this.guiScene.add(this.startButtonContainer);
+        // this.startButtonContainer.position
+        // this.mainchar.add(this.startButtonContainer);
+
+        this.guiElements.push(this.startButton);
+        this.guiActions.set(this.startButton, 'start');
+
+        // everything
+        this.mainMenuSet.push(mainMenuBackground, this.package, this.mainchar)
 
         // this._renderer.setSize(window.innerWidth, window.innerHeight)
         // document.body.appendChild(this._renderer.domElement)
@@ -120,10 +164,10 @@ export class GuiSystem implements IUpdateable {
 
         const aspect = window.innerWidth / window.innerHeight;
 
-        GuiSystem.orthoCam.left = - 1 * aspect / 2;
-        GuiSystem.orthoCam.right = 1 * aspect / 2;
-        GuiSystem.orthoCam.top = 1 / 2;
-        GuiSystem.orthoCam.bottom = - 1 / 2;
+        GuiSystem.orthoCam.left = - GuiSystem.frustumSize * aspect / 2;
+        GuiSystem.orthoCam.right = GuiSystem.frustumSize * aspect / 2;
+        GuiSystem.orthoCam.top = GuiSystem.frustumSize / 2;
+        GuiSystem.orthoCam.bottom = - GuiSystem.frustumSize / 2;
 
         GuiSystem.orthoCam.updateProjectionMatrix();
 
@@ -138,4 +182,25 @@ export class GuiSystem implements IUpdateable {
         GuiSystem.pointer.y = - (event.clientY / window.innerHeight) * 2 + 1;
         // console.log(GuiSystem.pointer)
     }
+
+
+    static changeState(state: UiState) {
+
+        this.mainMenuSet.forEach(menuItem => {
+            menuItem.visible = false
+        })
+        switch (state) {
+            case "gamemenu":
+
+                break;
+            case "mainmenu":
+                this.mainMenuSet.forEach(menuItem => {
+                    menuItem.visible = true
+                })
+                break;
+            default:
+                break;
+        }
+    }
+
 }
