@@ -1,4 +1,4 @@
-import { Mesh, Sphere, SphereGeometry, Texture } from "three";
+import { Mesh, SphereGeometry, Texture } from "three";
 import { StaticItem } from "./staticItem"
 import { AssetManager } from "./assetManager";
 

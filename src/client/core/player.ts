@@ -1,5 +1,5 @@
 import { fromEvent } from "rxjs";
-import { CircleGeometry, Color, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Texture, Vector3 } from "three";
+import { CircleGeometry, Color, Material, MathUtils, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Texture, Vector3 } from "three";
 import { IUpdateable } from "./common";
 import { RaycastManager } from "./raycastManager";
 import { BubbleGameMaterial } from "./bubbleGameMaterial";
@@ -56,6 +56,29 @@ export class Player extends Object3D implements IUpdateable {
 
     cleaning = false;
 
+    private _cleaningAmount = 1;
+
+    set cleaningAmount(newAmount: number) {
+        this._cleaningAmount = MathUtils.clamp(newAmount, 0, 1);
+        this.bubbleMaterial.color = new Color().lerpColors(this._bubbleEmptyColor, this._bubbleFullColor, this._cleaningAmount)
+        this.bubbleMaterial.opacity = MathUtils.clamp(this._cleaningAmount, 0.5, 1)
+        if (this.cleaningAmount <= 0) {
+            this.cleaning = false;
+        }
+        // console.log(this.cleaningAmount);
+    }
+
+    get cleaningAmount() {
+        return this._cleaningAmount
+    }
+
+    bubbleMaterial = new BubbleGameMaterial({
+        transparent: true
+    })
+
+    private _bubbleFullColor = new Color(0.1, 0.5, 0.1)
+    private _bubbleEmptyColor = new Color(1, 1, 1)
+
     constructor() {
         super();
         // this.renderOrder = 1000;
@@ -63,11 +86,16 @@ export class Player extends Object3D implements IUpdateable {
         this._playerPivot.position.y = 1
         this._playerPivot.add(this._playerGraphicsContainer)
 
-        const createPiece = (piece: CharacterPiece, offset = 0) => {
+        const createPiece = (piece: CharacterPiece, offset = 0, material?: BubbleGameMaterial) => {
             const mesh = new Mesh(new PlaneGeometry());
-            const mat = new BubbleGameMaterial({
-                transparent: true,
-            });
+            let mat: MeshBasicMaterial;
+            if (material !== undefined) {
+                mat = material
+            } else {
+                mat = new BubbleGameMaterial({
+                    transparent: true,
+                });
+            }
             mesh.material = mat
             this._characterGraphics.set(piece, { mesh: mesh, material: mat })
             mesh.position.z = offset;
@@ -76,8 +104,11 @@ export class Player extends Object3D implements IUpdateable {
         }
         createPiece('arms', 0.01)
         createPiece('body', -0.01)
-        createPiece('bubble')
+        createPiece('bubble', 0, this.bubbleMaterial)
         createPiece('tail', -0.02)
+
+        // this.bubbleMaterial.color = new Color(0, 1, 0)
+        this.cleaningAmount = 1;
 
         this._playerGraphicsContainer.scale.y = 3608 / 3000
 
@@ -112,7 +143,10 @@ export class Player extends Object3D implements IUpdateable {
                     break;
                 case 'Space':
                     this._inputsActive.add("clean")
-                    this.cleaning = true;
+                    if (this.cleaningAmount > 0) {
+                        this.cleaning = true;
+
+                    }
                     break;
                 default:
                     break;

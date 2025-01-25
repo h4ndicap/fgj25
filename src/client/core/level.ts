@@ -130,8 +130,11 @@ export class Level implements IUpdateable {
             testSphere.center = center;
             const inRange = testSphere.containsPoint(this.player.position)
             if (inRange) {
+                const cleaningAmount = delta;
                 // console.warn("CLEANING RANGE!")
-                cleanable.dirtiness -= delta;
+                cleanable.dirtiness -= cleaningAmount;
+                this.player.cleaningAmount -= cleaningAmount;
+
             }
         });
     }
