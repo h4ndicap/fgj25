@@ -42,8 +42,10 @@ export class Forcefield extends Object3D {
 
     logicalPosition: { x: number, y: number } = { x: 0, y: 0 }
 
-    constructor(x: number, y: number) {
+    constructor(x: number, y: number, force = -0.07, range = 2.5) {
         super();
+        this.force = force;
+        this.range = range
         this.radiusHelper.scale.setScalar(this.range);
         this.logicalPosition.x = x;
         this.logicalPosition.y = y;

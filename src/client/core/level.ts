@@ -135,7 +135,7 @@ export class Level implements IUpdateable {
                 }
                 // if we would fly over the centerpoint, clamp to it, add small epsilon
                 if (positionAdjustment.length() > lengthToTarget) {
-                    console.error("OVERSHOOT")
+                    // console.error("OVERSHOOT")
                     this.player.position.copy(targetPos)
                 } else {
                     // console.warn("undershoot", positionAdjustment.length(), lengthToTarget)

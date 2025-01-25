@@ -41,6 +41,7 @@ export class Player extends Object3D implements IUpdateable {
     deceleration = 0.25 * this._movementScaling;
 
     maxSpeed = 1 * this._movementScaling;
+    maxSpeedCleaning = 0.5 * this._movementScaling;
 
     floatHeight = 1;
 
@@ -51,6 +52,8 @@ export class Player extends Object3D implements IUpdateable {
 
     // flip this if the player loses control of the character, for transitions and animations and so
     controlEnabled = true;
+
+    cleaning = false;
 
     constructor() {
         super();
@@ -105,6 +108,7 @@ export class Player extends Object3D implements IUpdateable {
                     break;
                 case 'Space':
                     this._inputsActive.add("clean")
+                    this.cleaning = true;
                     break;
                 default:
                     break;
@@ -127,6 +131,7 @@ export class Player extends Object3D implements IUpdateable {
                     break;
                 case 'Space':
                     this._inputsActive.delete("clean")
+                    this.cleaning = false;
                     break;
                 default:
                     break;
@@ -161,8 +166,9 @@ export class Player extends Object3D implements IUpdateable {
 
         }
 
-        if (this._inputsActive.has('clean')) {
-            this._playerPivot.position.y = Math.sin(_timePassed * 15.5) * 0.1
+        if (this.cleaning) {
+            this._playerPivot.position.y = Math.sin(_timePassed * 12.5) * 0.1
+            this._playerPivot.position.x = Math.cos(_timePassed * 25.5) * 0.1
             this._playerPivot.position.y += 0.5
         } else {
             this._playerPivot.position.y = this.normalizedSpeed * 0.25 + Math.sin(_timePassed * 0.5) * 0.2 + Math.cos(_timePassed * 5.25) * 0.1;
@@ -184,11 +190,11 @@ export class Player extends Object3D implements IUpdateable {
         // this._playerPivot.rotateX(-0.4)as
         this._playerPivot.rotation.z = Math.sin(_timePassed * 1.7) * 0.17;
         const bubble = this._characterGraphics.get('bubble')!.mesh
-        if (this._inputsActive.has('clean')) {
-            bubble.scale.y = 0.6 + Math.cos(_timePassed * 1.7) * 0.1;
+        if (this.cleaning) {
+            bubble.scale.y = 0.8 + Math.cos(_timePassed * 1.7) * 0.1;
             bubble.scale.x = 1.4 + Math.sin(_timePassed * 1.7) * 0.1;
             bubble.position.x = Math.sin(_timePassed) * 0.05;
-            bubble.position.y = -0.1 + Math.cos(2 + _timePassed * 1.7) * 0.017;
+            bubble.position.y = -0.05 + Math.cos(2 + _timePassed * 1.7) * 0.017;
         } else {
             bubble.position.y = Math.cos(2 + _timePassed * 1.7) * 0.017;
             bubble.scale.y = 1.2 + Math.cos(_timePassed * 1.7) * 0.1;
@@ -263,7 +269,12 @@ export class Player extends Object3D implements IUpdateable {
 
         // how close we are to max speed? no need to completely clamp for simplicity
 
-        this._movementVector.clampLength(0, this.maxSpeed)
+        if (this.cleaning) {
+            this._movementVector.clampLength(0, this.maxSpeedCleaning)
+
+        } else {
+            this._movementVector.clampLength(0, this.maxSpeed)
+        }
         this._movementVectorRaw.clampLength(0, this.maxSpeed)
 
     }
