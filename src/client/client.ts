@@ -37,6 +37,8 @@ function initialize() {
         am.getTexture('hanta.png')!,
         am.getTexture(
             'hahmonkadet.png')!,
+        am.getTexture(
+            'hahmo5.png')!,
     )
     RenderingManager.getInstance().level = Level.current;
 

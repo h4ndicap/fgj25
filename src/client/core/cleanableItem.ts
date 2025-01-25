@@ -1,4 +1,4 @@
-import { BoxGeometry, Mesh, Object3D, SphereGeometry, Texture } from "three";
+import { Object3D, Texture } from "three";
 import { StaticItem } from "./staticItem"
 import { AssetManager } from "./assetManager";
 
@@ -44,7 +44,7 @@ export class CleanableItem extends StaticItem {
         // this.collision = new Mesh(new BoxGeometry(0.6, 6, 3))
         // this.collision.scale.z = 1
 
-        const parentscale = this.parent?.scale;
+        // const parentscale = this.parent?.scale;
         // console.log(parentscale!);
 
         // this.add(this.collision);

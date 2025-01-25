@@ -1,5 +1,5 @@
 import { fromEvent } from "rxjs";
-import { CircleGeometry, Color, Material, MathUtils, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Texture, Vector3 } from "three";
+import { CircleGeometry, Color, MathUtils, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Texture, Vector3 } from "three";
 import { IUpdateable } from "./common";
 import { RaycastManager } from "./raycastManager";
 import { BubbleGameMaterial } from "./bubbleGameMaterial";
@@ -24,6 +24,9 @@ export class Player extends Object3D implements IUpdateable {
 
 
     private _characterGraphics: Map<CharacterPiece, { mesh: Mesh, material: MeshBasicMaterial }> = new Map();
+
+    private _neutralExperssion?: Texture;
+    private _cleaningExpression?: Texture;
 
     private _shadow = new Mesh(new CircleGeometry())
 
@@ -54,7 +57,24 @@ export class Player extends Object3D implements IUpdateable {
     // flip this if the player loses control of the character, for transitions and animations and so
     controlEnabled = true;
 
-    cleaning = false;
+    private _cleaning = false;
+
+    get cleaning() {
+        return this._cleaning;
+    }
+
+    private set cleaning(newVal: boolean) {
+        this._cleaning = newVal;
+        const body = this._characterGraphics.get('body')
+        if (body) {
+            if (this.cleaning && this._cleaningExpression) {
+                body.material.map = this._cleaningExpression;
+            } else if (this._neutralExperssion) {
+                body.material.map = this._neutralExperssion;
+            }
+        }
+
+    }
 
     private _cleaningAmount = 1;
 
@@ -145,7 +165,7 @@ export class Player extends Object3D implements IUpdateable {
                     this._inputsActive.add("clean")
                     if (this.cleaningAmount > 0) {
                         this.cleaning = true;
-
+                        // this._characterGraphics.get('body')?.material.map = this._cleaningExpression;
                     }
                     break;
                 default:
@@ -207,7 +227,8 @@ export class Player extends Object3D implements IUpdateable {
 
         if (this.cleaning) {
             this._playerPivot.position.y = Math.sin(_timePassed * 12.5) * 0.1
-            this._playerPivot.position.x = Math.cos(_timePassed * 25.5) * 0.1
+            this._playerPivot.position.x = Math.cos(_timePassed * 20.5) * 0.1
+            this._playerPivot.position.z = Math.cos(_timePassed * 5.5) * 0.2
             this._playerPivot.position.y += 0.5
         } else {
             this._playerPivot.position.y = this.normalizedSpeed * 0.25 + Math.sin(_timePassed * 0.5) * 0.2 + Math.cos(_timePassed * 5.25) * 0.1;
@@ -333,7 +354,7 @@ export class Player extends Object3D implements IUpdateable {
     // }
 
 
-    setTextures(body: Texture, bubble: Texture, tail: Texture, arms: Texture) {
+    setTextures(body: Texture, bubble: Texture, tail: Texture, arms: Texture, cleaning: Texture) {
         // this._playerMaterial.map = idle;
         if (this._characterGraphics.has('arms')) {
             this._characterGraphics.get('arms')!.material.map = arms;
@@ -347,6 +368,9 @@ export class Player extends Object3D implements IUpdateable {
         if (this._characterGraphics.has('tail')) {
             this._characterGraphics.get('tail')!.material.map = tail;
         }
+        this._neutralExperssion = body;
+        this._cleaningExpression = cleaning;
+        // console.log(this._cleaningExpression)
     }
 
 

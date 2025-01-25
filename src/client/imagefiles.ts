@@ -18,6 +18,7 @@ export const imageFiles: string[] = [
     'lusikka.png',
     'lusikkalikainen.png',
     'pesuaine.png',
+    'hahmo5.png',
 ]
 
 export interface ImageTransformInfo {

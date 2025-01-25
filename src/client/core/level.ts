@@ -4,10 +4,10 @@ import { Player } from "./player";
 import { GameState, IUpdateable } from "./common";
 import { AssetManager } from "./assetManager";
 import { StaticItem } from "./staticItem";
-import { CleanableContructorParams, CleanableItem } from "./cleanableItem";
+import { CleanableItem } from "./cleanableItem";
 import { cleanablePairs } from "../imagefiles";
 import { BubbleGameMaterial } from "./bubbleGameMaterial";
-import { Observable, Subject } from "rxjs";
+import { Subject } from "rxjs";
 
 
 export class Level implements IUpdateable {
