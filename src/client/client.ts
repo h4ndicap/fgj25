@@ -57,6 +57,7 @@ function updateLoop() {
         // console.log("update")
         Level.current.update(delta, elapsed)
         RenderingManager.getInstance().update(delta, elapsed)
+        GuiSystem.getInstance().update(delta, elapsed);
     }
     requestAnimationFrame(updateLoop)
 }
