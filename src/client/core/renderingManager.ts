@@ -62,10 +62,13 @@ export class RenderingManager implements IUpdateable {
             //     console.log(ob)
             // })
 
-            // this._renderer.render(this._targetLevel.scene, this._cameraRig.camera);
+            this._renderer.render(this._targetLevel.scene, this._cameraRig.camera);
             // this._renderer.render(this._targetLevel.scene, GuiSystem.orthoCam);
             // this._renderer.render(GuiSystem.guiScene, GuiSystem.orthoCam);
             // this._renderer.render(GuiSystem.guiScene, this._cameraRig.camera);
+            // this._renderer.render(GuiSystem.guiScene, GuiSystem.orthoCam);
+
+        } else {
             this._renderer.render(GuiSystem.guiScene, GuiSystem.orthoCam);
 
         }

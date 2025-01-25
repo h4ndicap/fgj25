@@ -20,8 +20,13 @@ function initialize() {
 
     GuiSystem.uiAction$.subscribe(newAction => {
         console.log("action!", newAction)
+        startLevel();
     })
 
+    updateLoop();
+}
+
+function startLevel() {
     const levels: Level[] = [];
 
     const firstLevel = new Level(20, [
@@ -51,7 +56,7 @@ function initialize() {
     Level.current.gameStateChange$.subscribe(ev => {
         console.log(ev);
     })
-    updateLoop();
+
 }
 
 function updateLoop() {
@@ -60,9 +65,9 @@ function updateLoop() {
     if (Level.current !== undefined) {
         // console.log("update")
         Level.current.update(delta, elapsed)
-        RenderingManager.getInstance().update(delta, elapsed)
-        GuiSystem.getInstance().update(delta, elapsed);
     }
+    RenderingManager.getInstance().update(delta, elapsed)
+    GuiSystem.getInstance().update(delta, elapsed);
     requestAnimationFrame(updateLoop)
 }
 // updateLoop()
