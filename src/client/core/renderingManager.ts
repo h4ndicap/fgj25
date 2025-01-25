@@ -1,8 +1,9 @@
-import { Vector3, WebGLRenderer } from "three"
+import { PerspectiveCamera, Vector3, WebGLRenderer } from "three"
 // import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { CameraRig } from "./cameraRig";
 import { Level } from "./level";
 import { IUpdateable } from "./common";
+import { GuiSystem } from "./guiSystem";
 
 // camera, rendering all that jazz
 export class RenderingManager implements IUpdateable {
@@ -49,6 +50,7 @@ export class RenderingManager implements IUpdateable {
         window.addEventListener('resize', onWindowResize, false)
     }
 
+    randomCam = new PerspectiveCamera();
     update(delta: number, time?: number) {
         // this.orbitControls.update();
         // level.add(this.cameraRig);
@@ -60,7 +62,11 @@ export class RenderingManager implements IUpdateable {
             //     console.log(ob)
             // })
 
-            this._renderer.render(this._targetLevel.scene, this._cameraRig.camera);
+            // this._renderer.render(this._targetLevel.scene, this._cameraRig.camera);
+            // this._renderer.render(this._targetLevel.scene, GuiSystem.orthoCam);
+            // this._renderer.render(GuiSystem.guiScene, GuiSystem.orthoCam);
+            // this._renderer.render(GuiSystem.guiScene, this._cameraRig.camera);
+            this._renderer.render(GuiSystem.guiScene, GuiSystem.orthoCam);
         }
     }
 

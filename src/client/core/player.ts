@@ -232,8 +232,7 @@ export class Player extends Object3D implements IUpdateable {
             this._playerPivot.position.y += 0.5
         } else {
             this._playerPivot.position.y = this.normalizedSpeed * 0.25 + Math.sin(_timePassed * 0.5) * 0.2 + Math.cos(_timePassed * 5.25) * 0.1;
-            this._playerPivot.position.y += this.floatHeight
-
+            this._playerPivot.position.y += this.floatHeight;
         }
         // this._playerGraphics.position.x = Math.cos(_timePassed * 6.5) * 0.2;
         // console.log(...this._movementVector)

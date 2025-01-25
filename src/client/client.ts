@@ -5,6 +5,7 @@ import { AssetManager } from './core/assetManager';
 import { imageFiles } from './imagefiles';
 import { RaycastManager } from './core/raycastManager';
 import { Forcefield } from './core/mapGrid';
+import { GuiSystem } from './core/guiSystem';
 
 // const scene = new THREE.Scene()
 const clock = new THREE.Clock();
@@ -15,6 +16,7 @@ function initialize() {
 
     RenderingManager.getInstance();
     RaycastManager.getInstance(); // effectively the constructor
+    GuiSystem.getInstance();
 
     const levels: Level[] = [];
 
