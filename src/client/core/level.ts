@@ -51,21 +51,33 @@ export class Level implements IUpdateable {
 
             const pick = Math.random() * files.length;
             const texName = files[Math.floor(pick)];
-            console.log(pick, files, texName)
+            // console.log(pick, files, texName)
             const texture = AssetManager.getInstance().getTexture(texName)
             mesh.material = new MeshBasicMaterial({
                 map: texture,
                 transparent: true
             })
 
-            const scale = imageSizes.get(texName);
-            if (scale !== undefined) {
-                mesh.scale.setScalar(scale)
+            const imageInfo = imageSizes.get(texName);
+            // const ratio = texture?.image
+            // mesh.scale
+            // console.log(texture?.source);
+            if (imageInfo !== undefined) {
+                if (imageInfo.scale) {
+                    mesh.scale.copy(imageInfo?.scale)
+                }
                 mesh.scale.multiplyScalar(0.5 + Math.random() * 0.5)
-                mesh.rotation.z = Math.random() * Math.PI
+                if (imageInfo.rotation) {
+                    mesh.rotation.z = Math.random() * Math.PI
+                    mesh.rotation.x = -Math.PI / 2
+                }
+                if (imageInfo.offset) {
+                    mesh.position.add(imageInfo.offset)
+                }
+            } else {
+                mesh.position.y = 1
             }
 
-            mesh.rotation.x = -Math.PI / 2
         }
     }
 

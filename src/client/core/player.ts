@@ -4,7 +4,7 @@ import { IUpdateable } from "./common";
 import { RaycastManager } from "./raycastManager";
 
 
-type InputAction = 'left' | 'right' | 'up' | 'down'
+type InputAction = 'left' | 'right' | 'up' | 'down' | 'clean'
 
 type CharacterPiece = 'body' | 'bubble' | 'arms' | 'tail'
 
@@ -99,6 +99,9 @@ export class Player extends Object3D implements IUpdateable {
                 case 'KeyS':
                     this._inputsActive.add("down")
                     break;
+                case 'Space':
+                    this._inputsActive.add("clean")
+                    break;
                 default:
                     break;
             }
@@ -117,6 +120,9 @@ export class Player extends Object3D implements IUpdateable {
                     break;
                 case 'KeyS':
                     this._inputsActive.delete("down")
+                    break;
+                case 'Space':
+                    this._inputsActive.delete("clean")
                     break;
                 default:
                     break;
@@ -147,8 +153,14 @@ export class Player extends Object3D implements IUpdateable {
         }
         this.position.add(this._movementVector);
 
-        this._playerPivot.position.y = this.normalizedSpeed * 0.25 + Math.sin(_timePassed * 0.5) * 0.2 + Math.cos(_timePassed * 5.25) * 0.1;
-        this._playerPivot.position.y += this.floatHeight
+        if (this._inputsActive.has('clean')) {
+            this._playerPivot.position.y = Math.sin(_timePassed * 15.5) * 0.1
+            this._playerPivot.position.y += 0.5
+        } else {
+            this._playerPivot.position.y = this.normalizedSpeed * 0.25 + Math.sin(_timePassed * 0.5) * 0.2 + Math.cos(_timePassed * 5.25) * 0.1;
+            this._playerPivot.position.y += this.floatHeight
+
+        }
         // this._playerGraphics.position.x = Math.cos(_timePassed * 6.5) * 0.2;
         // console.log(...this._movementVector)
 
@@ -163,12 +175,34 @@ export class Player extends Object3D implements IUpdateable {
         // this._playerPivot.rotateY(Math.PI)
         // this._playerPivot.rotateX(-0.4)as
         this._playerPivot.rotation.z = Math.sin(_timePassed * 1.7) * 0.17;
-        this._characterGraphics.get('bubble')!.mesh.position.y = Math.cos(2 + _timePassed * 1.7) * 0.017;
-        this._characterGraphics.get('bubble')!.mesh.scale.y = 1.2 + Math.cos(_timePassed * 1.7) * 0.1;
-        this._characterGraphics.get('bubble')!.mesh.scale.x = 1.2 + Math.sin(_timePassed * 1.7) * 0.1;
-        this._characterGraphics.get('bubble')!.mesh.position.x = Math.sin(_timePassed) * 0.05;
-        this._characterGraphics.get('tail')!.mesh.rotation.z = Math.cos(2 + _timePassed * 1.7) * 0.08;
-        this._characterGraphics.get('tail')!.mesh.rotation.y = Math.cos(2 + _timePassed * 1.7) * 0.08;
+        const bubble = this._characterGraphics.get('bubble')!.mesh
+        if (this._inputsActive.has('clean')) {
+            bubble.scale.y = 0.6 + Math.cos(_timePassed * 1.7) * 0.1;
+            bubble.scale.x = 1.4 + Math.sin(_timePassed * 1.7) * 0.1;
+            bubble.position.x = Math.sin(_timePassed) * 0.05;
+            bubble.position.y = -0.1 + Math.cos(2 + _timePassed * 1.7) * 0.017;
+        } else {
+            bubble.position.y = Math.cos(2 + _timePassed * 1.7) * 0.017;
+            bubble.scale.y = 1.2 + Math.cos(_timePassed * 1.7) * 0.1;
+            bubble.scale.x = 1.2 + Math.sin(_timePassed * 1.7) * 0.1;
+            bubble.position.x = Math.sin(_timePassed) * 0.05;
+        }
+
+        const body = this._characterGraphics.get('body')!.mesh
+        const arms = this._characterGraphics.get('arms')!.mesh
+        body.rotation.z = Math.cos(2 + _timePassed * 1.7) * 0.08;
+        body.rotation.z = Math.cos(2 + _timePassed * 1.7) * 0.08;
+        body.position.x = Math.sin(_timePassed) * 0.1 - 0.05;
+
+        arms.rotation.z = Math.cos(2 + _timePassed * 1.7) * 0.08;
+        arms.rotation.z = Math.cos(2 + _timePassed * 1.7) * 0.08;
+        arms.position.x = Math.sin(_timePassed) * 0.1 - 0.05;
+
+
+        const tail = this._characterGraphics.get('tail')!.mesh
+        tail.rotation.z = Math.cos(2 + _timePassed * 1.7) * 0.08;
+        tail.rotation.y = Math.cos(2 + _timePassed * 1.7) * 0.08;
+        tail.position.x = Math.sin(_timePassed) * 0.1 - 0.05;
     }
 
     private updateMovementVector(delta: number) {
