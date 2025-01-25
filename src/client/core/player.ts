@@ -108,6 +108,11 @@ export class Player extends Object3D implements IUpdateable {
         const collisionTest = this.checkCollision();
         if (collisionTest.hit) {
             console.error("BÄNG")
+
+            // console.log(collisionTest.normalVector);
+            this._movementVector.reflect(collisionTest.normalVector!);
+
+            // const reflectionVector = 
         }
         this.position.add(this._movementVector);
 
@@ -160,7 +165,7 @@ export class Player extends Object3D implements IUpdateable {
 
         if (this._inputsActive.has('down')) {
             if (this._movementVector.z < 0) {
-                this._movementVector.z = Math.max(this._movementVector.z + dtDec, 0);
+                this._movementVector.z = Math.min(this._movementVector.z + dtDec, 0);
             }
             this._movementVector.z += dtAcc
         } else if (this._inputsActive.has('up')) {
@@ -178,10 +183,12 @@ export class Player extends Object3D implements IUpdateable {
         }
 
         // how close we are to max speed? no need to completely clamp for simplicity
-        this.normalizedSpeed = this._movementVector.length() / this.maxSpeed
-        if (this.normalizedSpeed >= 1) {
-            this._movementVector.divideScalar(this.normalizedSpeed);
-        }
+
+        this._movementVector.clampLength(0, this.maxSpeed)
+        // this.normalizedSpeed = this._movementVector.length() / this.maxSpeed
+        // if (this.normalizedSpeed >= 1) {
+        //     this._movementVector.divideScalar(this.normalizedSpeed);
+        // }
         // console.log(movementPhase);
 
         // this._movementVector.x += delta * (this._inputsActive.has('left') ? -1 : 0)
@@ -206,41 +213,16 @@ export class Player extends Object3D implements IUpdateable {
     }
 
 
+
     // raycast from current position to target position, if hit, return true
     checkCollision() {
-        const rm = RaycastManager.getInstance()
 
         const dir = this._movementVector.clone().normalize();
-        // const results = rm.raycast(this.position.clone().setY(0.5), this.position.clone().add(this._movementVector).setY(0.5), this.obstacles);
-        // const results = rm.raycast(this.position.clone().setY(0.5), this.position.clone().add(longRay).setY(0.5), this.obstacles);
 
-        const results = rm.raycast(this.position.clone().setY(0.5), dir, this.obstacles, this._movementVector.length());
+        const results = RaycastManager.getInstance().raycast(this.position.clone().setY(0.5), dir, this.obstacles, this._movementVector.length());
 
         // result.
-        if (results.length > 0) {
-
-            results.forEach(element => {
-
-                console.log("POX", results)
-
-                const hitMark = new Mesh(new SphereGeometry())
-                hitMark.material = new MeshBasicMaterial({
-                    color: new Color(1, 0, 0)
-                })
-                hitMark.position.copy(element.point)
-                hitMark.position.y = 2;
-                hitMark.scale.setScalar(0.01)
-                hitMark.scale.y = 1;
-
-                Level.current.scene.add(hitMark)
-
-                setTimeout(() => {
-                    hitMark.parent?.remove(hitMark)
-
-                }, 1500);
-            });
-        }
-        return { hit: results.length > 0, normalVector: undefined }
+        return { hit: results.length > 0, normalVector: results.length > 0 ? results[0].normal : undefined }
     }
 
 }
