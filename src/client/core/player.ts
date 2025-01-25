@@ -1,5 +1,5 @@
 import { fromEvent } from "rxjs";
-import { BoxGeometry, CircleGeometry, Color, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Texture, Vector3 } from "three";
+import { CircleGeometry, Color, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Texture, Vector3 } from "three";
 import { IUpdateable } from "./common";
 import { RaycastManager } from "./raycastManager";
 
@@ -47,6 +47,10 @@ export class Player extends Object3D implements IUpdateable {
     normalizedSpeed = 0;
 
     collisionVelocityLoss = 0.8;
+
+
+    // flip this if the player loses control of the character, for transitions and animations and so
+    controlEnabled = true;
 
     constructor() {
         super();
@@ -131,6 +135,7 @@ export class Player extends Object3D implements IUpdateable {
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     update(delta: number, _timePassed: number): void {
+
         // throw new Error("Method not implemented.");
         if (this._inputsActive.size > 0) {
             // console.log(...this._inputsActive.keys())
@@ -151,7 +156,10 @@ export class Player extends Object3D implements IUpdateable {
 
             // const reflectionVector = 
         }
-        this.position.add(this._movementVector);
+        if (this.controlEnabled) {
+            this.position.add(this._movementVector);
+
+        }
 
         if (this._inputsActive.has('clean')) {
             this._playerPivot.position.y = Math.sin(_timePassed * 15.5) * 0.1

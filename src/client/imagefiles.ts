@@ -1,4 +1,4 @@
-import { Euler, Vector3, Vector3Like } from "three"
+import { Euler, Vector3 } from "three"
 
 
 export const imageFiles: string[] = [

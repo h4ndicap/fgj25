@@ -34,24 +34,39 @@ export class MapTile extends Object3D {
 }
 
 export class Forcefield extends Object3D {
-    force: number = -1;
-    range: number = 1;
+    force: number = -0.07;
+    range: number = 5;
 
-    helper = new Mesh(new CircleGeometry())
+    radiusHelper = new Mesh(new CircleGeometry())
+    centerHelper = new Mesh(new CircleGeometry())
 
     logicalPosition: { x: number, y: number } = { x: 0, y: 0 }
 
     constructor(x: number, y: number) {
         super();
-        this.helper.scale.setScalar(this.range);
+        this.radiusHelper.scale.setScalar(this.range);
         this.logicalPosition.x = x;
         this.logicalPosition.y = y;
-        this.add(this.helper);
+        this.radiusHelper.rotation.x = -Math.PI / 2
+        this.centerHelper.rotation.x = -Math.PI / 2
+        this.add(this.radiusHelper);
+        this.add(this.centerHelper);
+        this.centerHelper.scale.setScalar(0.1)
+        this.centerHelper.position.y = 0.25
+        this.centerHelper.material = new MeshBasicMaterial({
+            color: new Color(0, 0, 0)
+        })
+        this.radiusHelper.material = new MeshBasicMaterial({
+            color: new Color().setScalar(0.4),
+            opacity: 0.5,
+            transparent: true
+        })
     }
 
-    // cubic interpolation:
+    // quad interpolation:
     private interpolate(t: number) {
-        return t * t * t;
+        // return t * t;
+        return t * t
     }
 
     getTargetMagnitude(target: Object3D) {
@@ -61,7 +76,7 @@ export class Forcefield extends Object3D {
 
         if (distance <= 0) { return 1 }
         if (distance < this.range) {
-            return (1 - distance / this.range)
+            return this.interpolate((1 - distance / this.range))
         } else {
             return 0;
         }
@@ -126,11 +141,17 @@ export class MapGrid extends Object3D {
 
     setForcefields(forceFields: Forcefield[]) {
         forceFields.forEach(element => {
-            const targetTile = this.tiles[element.logicalPosition.x][element.logicalPosition.y]
+            try {
+                const targetTile = this.tiles[element.logicalPosition.x][element.logicalPosition.y]
+                targetTile.add(element)
+                this.forceFields.push(element);
+
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            } catch (error) {
+                console.error("Can't find tile for forcefield", element.logicalPosition)
+            }
             // newObstacle.position.x = element.x;
             // newObstacle.position.z = element.y;
-            targetTile.add(element)
-            this.forceFields.push(element);
         });
     }
 

@@ -33,6 +33,8 @@ export class AssetManager {
 
         }).then((tex) => {
             this._textureCache.set(file, tex)
+        }).catch(ev => {
+            console.error("ohnou", ev)
         })
     }
 

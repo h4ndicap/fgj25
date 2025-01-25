@@ -24,7 +24,7 @@ function initialize() {
         { x: 8, y: 10 },
         { x: 8, y: 11 },
     ], [
-        new Forcefield(12, 8)
+        new Forcefield(18, 8)
     ])
 
     levels.push(firstLevel)
@@ -54,9 +54,11 @@ function updateLoop() {
 }
 // updateLoop()
 
+console.log("Loading textures...");
 AssetManager.getInstance().loadTextures(imageFiles).then(() => {
     // updateLoop()
+    console.log("Loaded")
     initialize();
-}).catch(() => {
-    console.error("Could not load files!!")
+}).catch((err) => {
+    console.error("Error initializing the game!!", err)
 });

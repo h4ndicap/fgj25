@@ -120,9 +120,32 @@ export class Level implements IUpdateable {
         this._groundGrid.forceFields.forEach(field => {
 
             const effectInfluence = field.getTargetMagnitude(this.player);
-            // if (effectInfluence > 0) {
+            if (effectInfluence > 0) {
 
-            // }
+                const targetPos = field.getWorldPosition(new Vector3());
+                const movement = new Vector3().subVectors(this.player.position, targetPos);
+                const lengthToTarget = movement.length();
+                const directionToTarget = movement.normalize()
+                // .multiplyScalar(effectInfluence * field.force * delta);
+                const positionAdjustment = directionToTarget.clone().multiplyScalar(effectInfluence * field.force)
+
+                if (positionAdjustment.length() > this.player.maxSpeed) {
+                    console.error("YOU WENT DOWN THE DRAIN! :(")
+                    this.player.controlEnabled = false;
+                }
+                // if we would fly over the centerpoint, clamp to it, add small epsilon
+                if (positionAdjustment.length() > lengthToTarget) {
+                    console.error("OVERSHOOT")
+                    this.player.position.copy(targetPos)
+                } else {
+                    // console.warn("undershoot", positionAdjustment.length(), lengthToTarget)
+                    this.player.position.add(positionAdjustment);
+                }
+
+                // console.log(...movement)
+
+
+            }
         })
     }
 
