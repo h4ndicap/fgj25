@@ -8,25 +8,30 @@ import { RaycastManager } from './core/raycastManager';
 // const scene = new THREE.Scene()
 const clock = new THREE.Clock();
 
-const assetManager = new AssetManager();
-const renderingManager = new RenderingManager();
-RaycastManager.getInstance(); // effectively the constructor
+AssetManager.getInstance();
 
-const levels: Level[] = [];
+function initialize() {
 
-const firstLevel = new Level(20, [
-    { x: 8, y: 8 },
-    { x: 8, y: 9 },
-    { x: 8, y: 10 },
-    { x: 8, y: 11 },
-])
+    RenderingManager.getInstance();
+    RaycastManager.getInstance(); // effectively the constructor
 
-levels.push(firstLevel)
+    const levels: Level[] = [];
 
-// eslint-disable-next-line prefer-const
-Level.current = levels[0];
+    const firstLevel = new Level(20, [
+        { x: 8, y: 8 },
+        { x: 8, y: 9 },
+        { x: 8, y: 10 },
+        { x: 8, y: 11 },
+    ])
 
-renderingManager.level = Level.current;
+    levels.push(firstLevel)
+
+    // eslint-disable-next-line prefer-const
+    Level.current = levels[0];
+    Level.current.player.setTextures(AssetManager.getInstance().getTexture('hahmo3.png')!)
+    RenderingManager.getInstance().level = Level.current;
+    updateLoop();
+}
 
 function updateLoop() {
     const delta = clock.getDelta()
@@ -34,15 +39,15 @@ function updateLoop() {
     if (Level.current !== undefined) {
         // console.log("update")
         Level.current.update(delta, elapsed)
-        renderingManager.update(delta, elapsed)
+        RenderingManager.getInstance().update(delta, elapsed)
     }
     requestAnimationFrame(updateLoop)
 }
 // updateLoop()
 
-assetManager.loadTextures(imageFiles).then(() => {
-    Level.current.player.setTextures(assetManager.getTexture('hahmo.png')!)
-    updateLoop()
+AssetManager.getInstance().loadTextures(imageFiles).then(() => {
+    // updateLoop()
+    initialize();
 }).catch(() => {
     console.error("Could not load files!!")
 });

@@ -1,5 +1,5 @@
 import { fromEvent } from "rxjs";
-import { AxesHelper, CircleGeometry, Color, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, SphereGeometry, Texture, Vector3 } from "three";
+import { CircleGeometry, Color, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, SphereGeometry, Texture, Vector3 } from "three";
 import { IUpdateable } from "./common";
 import { RaycastManager } from "./raycastManager";
 import { Level } from "./level";
@@ -13,7 +13,8 @@ export class Player extends Object3D implements IUpdateable {
 
     obstacles: Object3D[] = []
 
-    private _playerPivot = new AxesHelper();
+    // private _playerPivot = new AxesHelper();
+    private _playerPivot = new Object3D();
     private _playerGraphics = new Mesh(new PlaneGeometry())
     private _playerGraphicsOffset = new Vector3(0.12, 0.25, 0.01)
 
@@ -34,6 +35,8 @@ export class Player extends Object3D implements IUpdateable {
 
     maxSpeed = 1 * this._movementScaling;
 
+    floatHeight = 1;
+
     normalizedSpeed = 0;
 
     constructor() {
@@ -46,7 +49,7 @@ export class Player extends Object3D implements IUpdateable {
         this._playerGraphics.position.copy(this._playerGraphicsOffset)
         // this.add(this._playerGraphics);
 
-        this._shadow.rotateX(Math.PI / 2)
+        // this._shadow.rotateX(Math.PI / 2)
         this._shadow.material = new MeshBasicMaterial({
             opacity: 0.25,
             color: new Color(0, 0, 0),
@@ -112,7 +115,8 @@ export class Player extends Object3D implements IUpdateable {
         const movementExcess = this._movementVector.clone().multiplyScalar(30)
         this.worldTarget.copy(this.position).add(movementExcess)
 
-        this._playerPivot.position.y = 1 + this.normalizedSpeed * 0.25 + Math.sin(_timePassed * 0.5) * 0.2 + Math.cos(_timePassed * 5.25) * 0.1;
+        this._playerPivot.position.y = this.normalizedSpeed * 0.25 + Math.sin(_timePassed * 0.5) * 0.2 + Math.cos(_timePassed * 5.25) * 0.1;
+        this._playerPivot.position.y += this.floatHeight
         // this._playerGraphics.position.x = Math.cos(_timePassed * 6.5) * 0.2;
         // console.log(...this._movementVector)
 
@@ -123,8 +127,9 @@ export class Player extends Object3D implements IUpdateable {
             this._playerPivot.scale.x = 1;
         }
         this._playerPivot.lookAt(this._cameraPos);
-        this._playerPivot.rotateY(Math.PI)
-        this._playerPivot.rotateX(-0.4)
+        // this._playerPivot.rotateY(Math.PI)
+        // this._playerPivot.rotateY(Math.PI)
+        // this._playerPivot.rotateX(-0.4)as
         this._playerPivot.rotation.z = Math.sin(_timePassed * 1.7) * 0.17;
     }
 
@@ -154,15 +159,15 @@ export class Player extends Object3D implements IUpdateable {
 
 
         if (this._inputsActive.has('down')) {
+            if (this._movementVector.z < 0) {
+                this._movementVector.z = Math.max(this._movementVector.z + dtDec, 0);
+            }
+            this._movementVector.z += dtAcc
+        } else if (this._inputsActive.has('up')) {
             if (this._movementVector.z > 0) {
                 this._movementVector.z = Math.max(this._movementVector.z - dtDec, 0);
             }
             this._movementVector.z -= dtAcc
-        } else if (this._inputsActive.has('up')) {
-            if (this._movementVector.z < 0) {
-                this._movementVector.z = Math.min(this._movementVector.z + dtDec, 0);
-            }
-            this._movementVector.z += dtAcc
         } else {
             // decay
             if (this._movementVector.z > 0) {
@@ -220,8 +225,13 @@ export class Player extends Object3D implements IUpdateable {
 
             Level.current.scene.add(hitMark)
 
+            setTimeout(() => {
+                hitMark.parent?.remove(hitMark)
+
+            }, 1500);
+
         }
-        return { hit: false, normalVector: undefined }
+        return { hit: results.length > 0, normalVector: undefined }
     }
 
 }

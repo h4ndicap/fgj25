@@ -11,6 +11,19 @@ export class AssetManager {
 
     private _filePrefix = 'assets/'
 
+    private static instance: AssetManager;
+
+    private constructor() { }
+
+    static getInstance() {
+        if (this.instance) {
+            return this.instance;
+        }
+        this.instance = new AssetManager();
+        return this.instance;
+    }
+
+
     getTexture(filename: string) {
         return this._textureCache.get(filename);
     }

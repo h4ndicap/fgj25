@@ -1,4 +1,5 @@
-import { AxesHelper, BoxGeometry, Color, LineBasicMaterial, LineSegments, Mesh, Object3D, WireframeGeometry } from "three";
+import { AxesHelper, BoxGeometry, Color, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, Object3D, WireframeGeometry } from "three";
+import { AssetManager } from "./assetManager";
 
 export class MapTile extends Object3D {
 
@@ -36,6 +37,12 @@ export class Obstacle extends Object3D {
     constructor() {
         super();
         this._collider = new Mesh(new BoxGeometry())
+        const simpukka = AssetManager.getInstance().getTexture('simpukka1.png');
+        console.log(simpukka);
+        this._collider.material = new MeshBasicMaterial({
+            map: simpukka
+        });
+        this.collider.position.y = 0.5
         // this.helper
         this.add(this._collider)
     }

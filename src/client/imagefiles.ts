@@ -1,7 +1,7 @@
 
 
 export const imageFiles: string[] = [
-    'hahmo.png',
+    'hahmo3.png',
     'kivikasvi.png',
     'simpukka1.png',
     'simpukka2.png',

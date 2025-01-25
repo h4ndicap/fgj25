@@ -1,5 +1,5 @@
-import { BufferGeometry, Color, Line, LineBasicMaterial, Mesh, MeshBasicMaterial, Object3D, Raycaster, SphereGeometry, Vector3 } from "three";
-import { Level } from "./level";
+import { Color, Mesh, MeshBasicMaterial, Object3D, Raycaster, SphereGeometry, Vector3 } from "three";
+// import { Level } from "./level";
 
 
 export class RaycastManager {
@@ -34,14 +34,14 @@ export class RaycastManager {
     raycast(from: Vector3, to: Vector3, against: Object3D[]) {
         // console.log("zapp")
 
-        Level.current.add(RaycastManager._helperFrom);
-        Level.current.add(RaycastManager._helperTo);
+        // Level.current.add(RaycastManager._helperFrom);
+        // Level.current.add(RaycastManager._helperTo);
 
         RaycastManager._helperFrom.position.copy(from);
         RaycastManager._helperTo.position.copy(to);
 
         this._raycaster.set(from, to);
-        const intersects = this._raycaster.intersectObjects(against, false)
+        const intersects = this._raycaster.intersectObjects(against)
         return intersects;
     }
 }

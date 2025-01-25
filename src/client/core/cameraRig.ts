@@ -23,14 +23,14 @@ export class CameraRig extends Object3D implements IUpdateable {
         this._rigRoot.add(this._polar)
         this._polar.add(this._azimuth);
         this._azimuth.add(this._dolly);
-        this._polar.rotation.y = Math.PI
+        // this._polar.rotation.y = Math.PI
         this._azimuth.rotation.x = -1.00
         this._dolly.position.z = 7;
         // this.camera.position.z = -5
         this._dolly.add(this.camera)
 
         // found it nicer to flip the world view this way :D
-        this.camera.scale.x = -1
+        // this.camera.scale.x = -1
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

@@ -15,6 +15,17 @@ export class RenderingManager implements IUpdateable {
         this._targetLevel = lev;
         this._targetLevel.add(this._cameraRig)
     }
+
+    private static instance: RenderingManager;
+
+    static getInstance() {
+        if (this.instance) {
+            return this.instance;
+        }
+        this.instance = new RenderingManager();
+
+        return this.instance;
+    }
     // get level() {
     //     return this._targetLevel;
     // }
