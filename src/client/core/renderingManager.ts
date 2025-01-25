@@ -67,6 +67,7 @@ export class RenderingManager implements IUpdateable {
             // this._renderer.render(GuiSystem.guiScene, GuiSystem.orthoCam);
             // this._renderer.render(GuiSystem.guiScene, this._cameraRig.camera);
             this._renderer.render(GuiSystem.guiScene, GuiSystem.orthoCam);
+
         }
     }
 

@@ -18,6 +18,10 @@ function initialize() {
     RaycastManager.getInstance(); // effectively the constructor
     GuiSystem.getInstance();
 
+    GuiSystem.uiAction$.subscribe(newAction => {
+        console.log("action!", newAction)
+    })
+
     const levels: Level[] = [];
 
     const firstLevel = new Level(20, [

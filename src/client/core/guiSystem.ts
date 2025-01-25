@@ -1,8 +1,11 @@
 import { BoxGeometry, Color, MathUtils, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneGeometry, Raycaster, Scene, Vector2 } from "three";
 import { IUpdateable } from "./common";
 import { AssetManager } from "./assetManager";
+import { Subject } from "rxjs";
 
 export type UiState = 'mainmenu' | 'gamemenu'
+
+export type UiAction = 'start'
 
 // an ugly super-static class for rendering UI whenever
 export class GuiSystem implements IUpdateable {
@@ -18,7 +21,7 @@ export class GuiSystem implements IUpdateable {
 
     private static guiRaycaster = new Raycaster();
 
-    private static guiActions = new Map<Object3D, string>();
+    private static guiActions = new Map<Object3D, UiAction>();
     private static guiElements: Object3D[] = [];
     static guiRoot: Object3D = new Object3D();
 
@@ -30,6 +33,10 @@ export class GuiSystem implements IUpdateable {
     private static startButtonScale = 1;
 
     private static mainMenuSet: Object3D[] = []
+
+    private static activeAction: UiAction | undefined = undefined;
+
+    public static uiAction$: Subject<UiAction> = new Subject<UiAction>();
     // static guiMap: any;
 
     private constructor() { }
@@ -41,12 +48,13 @@ export class GuiSystem implements IUpdateable {
             const intersects = GuiSystem.guiRaycaster.intersectObjects(GuiSystem.guiElements)
             if (intersects.length > 0) {
                 const action = GuiSystem.guiActions.get(intersects[0].object)
+                GuiSystem.activeAction = action;
                 // console.log(action)
                 if (action === 'start') {
 
                     GuiSystem.startButtonScale += delta;
 
-                    console.log("start in scale");
+                    // console.log("start in scale");
                     const current = GuiSystem.startButtonContainer.scale.y;
                     GuiSystem.startButtonContainer.scale.addScalar(Math.max(current + delta, 1.2));
 
@@ -58,6 +66,7 @@ export class GuiSystem implements IUpdateable {
                 }
             } else {
                 GuiSystem.startButtonScale -= delta;
+                GuiSystem.activeAction = undefined;
             }
 
         }
@@ -156,6 +165,13 @@ export class GuiSystem implements IUpdateable {
         this.onWindowResize();
         window.addEventListener('resize', this.onWindowResize);
         document.addEventListener('pointermove', this.onPointerMove);
+        document.addEventListener('mousedown', () => {
+            // console.log("nax ")
+            if (this.activeAction !== undefined) {
+                this.uiAction$.next(this.activeAction);
+            }
+
+        });
 
         return this.instance;
     }
