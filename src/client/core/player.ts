@@ -2,7 +2,6 @@ import { fromEvent } from "rxjs";
 import { AxesHelper, CircleGeometry, Color, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, SphereGeometry, Texture, Vector3 } from "three";
 import { IUpdateable } from "./common";
 import { RaycastManager } from "./raycastManager";
-import { Obstacle } from "./mapGrid";
 import { Level } from "./level";
 
 
