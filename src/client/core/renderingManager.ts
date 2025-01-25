@@ -20,7 +20,7 @@ export class RenderingManager implements IUpdateable {
     // }
 
     // use this as some placeholderish thing of something fails?
-    private _emptyLevel = new Level();
+    // private _emptyLevel = new Level();
 
     // orbitControls: OrbitControls;
 

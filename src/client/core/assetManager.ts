@@ -11,8 +11,12 @@ export class AssetManager {
 
     private _filePrefix = 'assets/'
 
+    getTexture(filename: string) {
+        return this._textureCache.get(filename);
+    }
+
     async loadTexture(file: string) {
-        return this._textureLoader.loadAsync(file, () => {
+        return this._textureLoader.loadAsync(this._filePrefix + file, () => {
 
         }).then((tex) => {
             this._textureCache.set(file, tex)
@@ -22,7 +26,7 @@ export class AssetManager {
     async loadTextures(files: string[]) {
         for (let index = 0; index < files.length; index++) {
             const element = files[index];
-            await this.loadTexture(this._filePrefix + element);
+            await this.loadTexture(element);
         }
     }
 }
