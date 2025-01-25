@@ -209,27 +209,36 @@ export class Player extends Object3D implements IUpdateable {
     // raycast from current position to target position, if hit, return true
     checkCollision() {
         const rm = RaycastManager.getInstance()
-        const results = rm.raycast(this.position, this.position.clone().add(this._movementVector), this.obstacles);
+
+        const dir = this._movementVector.clone().normalize();
+        // const results = rm.raycast(this.position.clone().setY(0.5), this.position.clone().add(this._movementVector).setY(0.5), this.obstacles);
+        // const results = rm.raycast(this.position.clone().setY(0.5), this.position.clone().add(longRay).setY(0.5), this.obstacles);
+
+        const results = rm.raycast(this.position.clone().setY(0.5), dir, this.obstacles, this._movementVector.length());
+
         // result.
         if (results.length > 0) {
-            console.log("POX", results)
 
-            const hitMark = new Mesh(new SphereGeometry())
-            hitMark.material = new MeshBasicMaterial({
-                color: new Color(1, 0, 0)
-            })
-            hitMark.position.copy(results[0].point)
-            hitMark.position.y = 2;
-            hitMark.scale.setScalar(0.01)
-            hitMark.scale.y = 1;
+            results.forEach(element => {
 
-            Level.current.scene.add(hitMark)
+                console.log("POX", results)
 
-            setTimeout(() => {
-                hitMark.parent?.remove(hitMark)
+                const hitMark = new Mesh(new SphereGeometry())
+                hitMark.material = new MeshBasicMaterial({
+                    color: new Color(1, 0, 0)
+                })
+                hitMark.position.copy(element.point)
+                hitMark.position.y = 2;
+                hitMark.scale.setScalar(0.01)
+                hitMark.scale.y = 1;
 
-            }, 1500);
+                Level.current.scene.add(hitMark)
 
+                setTimeout(() => {
+                    hitMark.parent?.remove(hitMark)
+
+                }, 1500);
+            });
         }
         return { hit: results.length > 0, normalVector: undefined }
     }
