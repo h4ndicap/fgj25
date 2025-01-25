@@ -1,28 +1,35 @@
 import { fromEvent } from "rxjs";
-import { CircleGeometry, Color, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, SphereGeometry, Texture, Vector3 } from "three";
+import { BoxGeometry, CircleGeometry, Color, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Texture, Vector3 } from "three";
 import { IUpdateable } from "./common";
 import { RaycastManager } from "./raycastManager";
-import { Level } from "./level";
 
 
 type InputAction = 'left' | 'right' | 'up' | 'down'
+
+type CharacterPiece = 'body' | 'bubble' | 'arms' | 'tail'
 
 export class Player extends Object3D implements IUpdateable {
 
     private _inputsActive = new Set<InputAction>()
 
+    // test agains these before finishing move
     obstacles: Object3D[] = []
 
     // private _playerPivot = new AxesHelper();
     private _playerPivot = new Object3D();
-    private _playerGraphics = new Mesh(new PlaneGeometry())
+    // private _playerGraphics = new Mesh(new PlaneGeometry())
+    private _playerGraphicsContainer = new Object3D();
     private _playerGraphicsOffset = new Vector3(0.12, 0.25, 0.01)
 
-    private _playerMaterial = new MeshBasicMaterial();
+
+    private _characterGraphics: Map<CharacterPiece, { mesh: Mesh, material: MeshBasicMaterial }> = new Map();
 
     private _shadow = new Mesh(new CircleGeometry())
 
     private _movementVector = new Vector3();
+
+    // where the player would move without any change
+    private _movementVectorRaw = new Vector3();
 
     worldTarget = new Vector3();
 
@@ -39,14 +46,33 @@ export class Player extends Object3D implements IUpdateable {
 
     normalizedSpeed = 0;
 
+    collisionVelocityLoss = 0.8;
+
     constructor() {
         super();
         this.add(this._playerPivot);
         this._playerPivot.position.y = 1
-        this._playerPivot.add(this._playerGraphics)
-        this._playerMaterial.transparent = true;
-        this._playerGraphics.material = this._playerMaterial;
-        this._playerGraphics.position.copy(this._playerGraphicsOffset)
+        this._playerPivot.add(this._playerGraphicsContainer)
+
+        const createPiece = (piece: CharacterPiece, offset = 0) => {
+            const mesh = new Mesh(new PlaneGeometry());
+            const mat = new MeshBasicMaterial({
+                transparent: true,
+            });
+            mesh.material = mat
+            this._characterGraphics.set(piece, { mesh: mesh, material: mat })
+            mesh.position.z = offset;
+            this._playerGraphicsContainer.add(mesh)
+        }
+        createPiece('arms', 0.1)
+        createPiece('body', -0.1)
+        createPiece('bubble')
+        createPiece('tail', -0.2)
+
+        this._playerGraphicsContainer.scale.y = 3608 / 3000
+
+        // this._playerGraphics.material = this._playerMaterial;
+        this._playerGraphicsContainer.position.copy(this._playerGraphicsOffset)
         // this.add(this._playerGraphics);
 
         // this._shadow.rotateX(Math.PI / 2)
@@ -106,19 +132,20 @@ export class Player extends Object3D implements IUpdateable {
         this.updateMovementVector(delta);
 
         const collisionTest = this.checkCollision();
+        // effectively a helper for the camera
+        const movementExcess = this._movementVectorRaw.clone().multiplyScalar(15)
+        this.worldTarget.copy(this.position).add(movementExcess)
         if (collisionTest.hit) {
-            console.error("BÄNG")
+            // console.error("BÄNG")
 
             // console.log(collisionTest.normalVector);
             this._movementVector.reflect(collisionTest.normalVector!);
 
+            this._movementVector.multiplyScalar(this.collisionVelocityLoss);
+
             // const reflectionVector = 
         }
         this.position.add(this._movementVector);
-
-        // effectively a helper for the camera
-        const movementExcess = this._movementVector.clone().multiplyScalar(30)
-        this.worldTarget.copy(this.position).add(movementExcess)
 
         this._playerPivot.position.y = this.normalizedSpeed * 0.25 + Math.sin(_timePassed * 0.5) * 0.2 + Math.cos(_timePassed * 5.25) * 0.1;
         this._playerPivot.position.y += this.floatHeight
@@ -126,9 +153,9 @@ export class Player extends Object3D implements IUpdateable {
         // console.log(...this._movementVector)
 
         // this._playerGraphics.rotation.y = 1
-        if (this._movementVector.x > 0) {
+        if (this._inputsActive.has('right')) {
             this._playerPivot.scale.x = -1;
-        } else {
+        } else if (this._inputsActive.has('left')) {
             this._playerPivot.scale.x = 1;
         }
         this._playerPivot.lookAt(this._cameraPos);
@@ -136,6 +163,12 @@ export class Player extends Object3D implements IUpdateable {
         // this._playerPivot.rotateY(Math.PI)
         // this._playerPivot.rotateX(-0.4)as
         this._playerPivot.rotation.z = Math.sin(_timePassed * 1.7) * 0.17;
+        this._characterGraphics.get('bubble')!.mesh.position.y = Math.cos(2 + _timePassed * 1.7) * 0.017;
+        this._characterGraphics.get('bubble')!.mesh.scale.y = 1.2 + Math.cos(_timePassed * 1.7) * 0.1;
+        this._characterGraphics.get('bubble')!.mesh.scale.x = 1.2 + Math.sin(_timePassed * 1.7) * 0.1;
+        this._characterGraphics.get('bubble')!.mesh.position.x = Math.sin(_timePassed) * 0.05;
+        this._characterGraphics.get('tail')!.mesh.rotation.z = Math.cos(2 + _timePassed * 1.7) * 0.08;
+        this._characterGraphics.get('tail')!.mesh.rotation.y = Math.cos(2 + _timePassed * 1.7) * 0.08;
     }
 
     private updateMovementVector(delta: number) {
@@ -147,11 +180,13 @@ export class Player extends Object3D implements IUpdateable {
             if (this._movementVector.x > 0) {
                 this._movementVector.x = Math.max(this._movementVector.x - dtDec, 0);
             }
+            this._movementVectorRaw.x -= dtAcc
             this._movementVector.x -= dtAcc
         } else if (this._inputsActive.has('right')) {
             if (this._movementVector.x < 0) {
                 this._movementVector.x = Math.min(this._movementVector.x + dtDec, 0);
             }
+            this._movementVectorRaw.x += dtAcc
             this._movementVector.x += dtAcc
         } else {
             // decay
@@ -168,11 +203,13 @@ export class Player extends Object3D implements IUpdateable {
                 this._movementVector.z = Math.min(this._movementVector.z + dtDec, 0);
             }
             this._movementVector.z += dtAcc
+            this._movementVectorRaw.z += dtAcc
         } else if (this._inputsActive.has('up')) {
             if (this._movementVector.z > 0) {
                 this._movementVector.z = Math.max(this._movementVector.z - dtDec, 0);
             }
             this._movementVector.z -= dtAcc
+            this._movementVectorRaw.z -= dtAcc
         } else {
             // decay
             if (this._movementVector.z > 0) {
@@ -185,16 +222,7 @@ export class Player extends Object3D implements IUpdateable {
         // how close we are to max speed? no need to completely clamp for simplicity
 
         this._movementVector.clampLength(0, this.maxSpeed)
-        // this.normalizedSpeed = this._movementVector.length() / this.maxSpeed
-        // if (this.normalizedSpeed >= 1) {
-        //     this._movementVector.divideScalar(this.normalizedSpeed);
-        // }
-        // console.log(movementPhase);
-
-        // this._movementVector.x += delta * (this._inputsActive.has('left') ? -1 : 0)
-        // this._movementVector.x += delta * (this._inputsActive.has('right') ? 1 : 0)
-        // this._movementVector.z += delta * (this._inputsActive.has('up') ? 1 : 0)
-        // this._movementVector.z += delta * (this._inputsActive.has('down') ? -1 : 0)
+        this._movementVectorRaw.clampLength(0, this.maxSpeed)
 
     }
 
@@ -208,8 +236,25 @@ export class Player extends Object3D implements IUpdateable {
         // this._playerGraphics.rotateZ()
     }
 
-    setTextures(idle: Texture) {
-        this._playerMaterial.map = idle;
+    // setTextures(idle: Texture) {
+    //     this._playerMaterial.map = idle;
+    // }
+
+
+    setTextures(body: Texture, bubble: Texture, tail: Texture, arms: Texture) {
+        // this._playerMaterial.map = idle;
+        if (this._characterGraphics.has('arms')) {
+            this._characterGraphics.get('arms')!.material.map = arms;
+        }
+        if (this._characterGraphics.has('body')) {
+            this._characterGraphics.get('body')!.material.map = body;
+        }
+        if (this._characterGraphics.has('bubble')) {
+            this._characterGraphics.get('bubble')!.material.map = bubble;
+        }
+        if (this._characterGraphics.has('tail')) {
+            this._characterGraphics.get('tail')!.material.map = tail;
+        }
     }
 
 
@@ -218,7 +263,6 @@ export class Player extends Object3D implements IUpdateable {
     checkCollision() {
 
         const dir = this._movementVector.clone().normalize();
-
         const results = RaycastManager.getInstance().raycast(this.position.clone().setY(0.5), dir, this.obstacles, this._movementVector.length());
 
         // result.

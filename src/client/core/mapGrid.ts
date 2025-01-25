@@ -1,11 +1,11 @@
-import { AxesHelper, BoxGeometry, Color, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, Object3D, WireframeGeometry } from "three";
+import { AxesHelper, BoxGeometry, CircleGeometry, Color, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Vector3, WireframeGeometry } from "three";
 import { AssetManager } from "./assetManager";
 
 export class MapTile extends Object3D {
 
     private _helper: LineSegments;
 
-    // private _ground = new Mesh(new BoxGeometry(1, 0.1, 1))
+    private _ground = new Mesh(new PlaneGeometry())
 
     constructor(x: number, y: number) {
         super();
@@ -22,10 +22,53 @@ export class MapTile extends Object3D {
         this._helper.material.transparent = true;
 
         this.add(this._helper);
+        this._helper.visible = false;
+        // this._ground.material = new MeshBasicMaterial({
+        //     map: AssetManager.getInstance().getTexture('maa.png')
+        // })
+        // this._ground.rotation.x = -Math.PI / 2
+        // this.add(this._ground)
+        // this._ground.
         // this.add(this._ground)
     }
 }
 
+export class Forcefield extends Object3D {
+    force: number = -1;
+    range: number = 1;
+
+    helper = new Mesh(new CircleGeometry())
+
+    logicalPosition: { x: number, y: number } = { x: 0, y: 0 }
+
+    constructor(x: number, y: number) {
+        super();
+        this.helper.scale.setScalar(this.range);
+        this.logicalPosition.x = x;
+        this.logicalPosition.y = y;
+        this.add(this.helper);
+    }
+
+    // cubic interpolation:
+    private interpolate(t: number) {
+        return t * t * t;
+    }
+
+    getTargetMagnitude(target: Object3D) {
+        const targetWorld = target.getWorldPosition(new Vector3())
+        const thisWorld = this.getWorldPosition(new Vector3())
+        const distance = targetWorld.distanceTo(thisWorld)
+
+        if (distance <= 0) { return 1 }
+        if (distance < this.range) {
+            return (1 - distance / this.range)
+        } else {
+            return 0;
+        }
+        // if (distance > this.range) return 0;
+        // console.log("affecting", distance, this.range);
+    }
+}
 export class Obstacle extends Object3D {
 
     private _collider;
@@ -51,7 +94,9 @@ export class Obstacle extends Object3D {
 
 export class MapGrid extends Object3D {
     tiles: MapTile[][] = []
-    obstacleColliders: Object3D[] = [];
+    obstacles: Object3D[] = [];
+
+    forceFields: Forcefield[] = [];
 
     constructor(size: number) {
         super();
@@ -75,9 +120,21 @@ export class MapGrid extends Object3D {
             // newObstacle.position.x = element.x;
             // newObstacle.position.z = element.y;
             targetTile.add(newObstacle)
-            this.obstacleColliders.push(newObstacle.collider);
+            this.obstacles.push(newObstacle);
         });
     }
+
+    setForcefields(forceFields: Forcefield[]) {
+        forceFields.forEach(element => {
+            const targetTile = this.tiles[element.logicalPosition.x][element.logicalPosition.y]
+            // newObstacle.position.x = element.x;
+            // newObstacle.position.z = element.y;
+            targetTile.add(element)
+            this.forceFields.push(element);
+        });
+    }
+
+
     getTile(x: number, y: number) {
         return this.tiles[x][y];
     }
