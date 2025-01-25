@@ -3,6 +3,7 @@ import { Forcefield, MapGrid } from "./mapGrid";
 import { Player } from "./player";
 import { IUpdateable } from "./common";
 import { AssetManager } from "./assetManager";
+import { imageSizes } from "../imagefiles";
 
 
 export class Level implements IUpdateable {
@@ -38,6 +39,36 @@ export class Level implements IUpdateable {
         this.scene.add(object);
     }
 
+    addRandomPlants(files: string[], size: number, amount: 100) {
+        for (let index = 0; index < amount; index++) {
+            const mesh = new Mesh(new PlaneGeometry())
+            this.add(mesh);
+            const randX = Math.random() * size - size / 2;
+            const randY = Math.random() * size - size / 2;
+            mesh.position.x = randX;
+            mesh.position.z = randY;
+            // mesh.position.y = 0.5
+
+            const pick = Math.random() * files.length;
+            const texName = files[Math.floor(pick)];
+            console.log(pick, files, texName)
+            const texture = AssetManager.getInstance().getTexture(texName)
+            mesh.material = new MeshBasicMaterial({
+                map: texture,
+                transparent: true
+            })
+
+            const scale = imageSizes.get(texName);
+            if (scale !== undefined) {
+                mesh.scale.setScalar(scale)
+                mesh.scale.multiplyScalar(0.5 + Math.random() * 0.5)
+                mesh.rotation.z = Math.random() * Math.PI
+            }
+
+            mesh.rotation.x = -Math.PI / 2
+        }
+    }
+
     // kind of annoying to create a jumbo constructor but it's just jamming
     constructor(gridSize: number, obstacles: { x: number, y: number }[], forcefields: Forcefield[]) {
         this._groundGrid = new MapGrid(gridSize);
@@ -62,6 +93,8 @@ export class Level implements IUpdateable {
         this._groundBack.position.y = -0.1
         this._groundBack.scale.setScalar(gridSize)
         this.add(this._groundBack)
+
+        this.addRandomPlants(['kivikasvi.png', 'simpukka1.png', 'simpukka2.png'], 20, 100)
     }
 
 

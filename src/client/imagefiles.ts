@@ -12,3 +12,8 @@ export const imageFiles: string[] = [
     'simpukka2.png',
     'maa.png',
 ]
+
+export const imageSizes = new Map<string, number>()
+
+imageSizes.set('simpukka2.png', 0.5)
+imageSizes.set('simpukka1.png', 0.5)
