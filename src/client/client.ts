@@ -24,7 +24,7 @@ function initialize() {
         { x: 8, y: 10 },
         { x: 8, y: 11 },
     ], [
-        new Forcefield(18, 8)
+        new Forcefield(19, 0, -0.1, 15)
     ])
 
     levels.push(firstLevel)
@@ -39,6 +39,10 @@ function initialize() {
             'hahmonkadet.png')!,
     )
     RenderingManager.getInstance().level = Level.current;
+
+    Level.current.gameStateChange$.subscribe(ev => {
+        console.log(ev);
+    })
     updateLoop();
 }
 

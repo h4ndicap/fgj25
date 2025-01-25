@@ -48,7 +48,7 @@ export class Player extends Object3D implements IUpdateable {
 
     normalizedSpeed = 0;
 
-    collisionVelocityLoss = 0.8;
+    collisionVelocityLoss = 0.5;
 
 
     // flip this if the player loses control of the character, for transitions and animations and so
@@ -61,7 +61,7 @@ export class Player extends Object3D implements IUpdateable {
     set cleaningAmount(newAmount: number) {
         this._cleaningAmount = MathUtils.clamp(newAmount, 0, 1);
         this.bubbleMaterial.color = new Color().lerpColors(this._bubbleEmptyColor, this._bubbleFullColor, this._cleaningAmount)
-        this.bubbleMaterial.opacity = MathUtils.clamp(this._cleaningAmount, 0.5, 1)
+        // this.bubbleMaterial.opacity = MathUtils.clamp(this._cleaningAmount, 0.5, 1)
         if (this.cleaningAmount <= 0) {
             this.cleaning = false;
         }
@@ -194,6 +194,7 @@ export class Player extends Object3D implements IUpdateable {
 
             // console.log(collisionTest.normalVector);
             this._movementVector.reflect(collisionTest.normalVector!);
+            this._movementVector.y = 0;
 
             this._movementVector.multiplyScalar(this.collisionVelocityLoss);
 

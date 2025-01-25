@@ -1,4 +1,4 @@
-import { Mesh, SphereGeometry, Texture } from "three";
+import { BoxGeometry, Mesh, Object3D, SphereGeometry, Texture } from "three";
 import { StaticItem } from "./staticItem"
 import { AssetManager } from "./assetManager";
 
@@ -9,9 +9,9 @@ export interface CleanableContructorParams {
 
 export class CleanableItem extends StaticItem {
 
-    cleanableCollider = new Mesh(new SphereGeometry(1, 8, 4))
-
     private _cleanTexture: Texture;
+
+    collision?: Object3D;
 
     // set from 1 to 0
     private _dirtiness = 1;
@@ -41,6 +41,14 @@ export class CleanableItem extends StaticItem {
         super(params.dirty);
         this._cleanTexture = AssetManager.getInstance().getTexture(params.clean)!
         // this.add(this.cleanableCollider);
+        // this.collision = new Mesh(new BoxGeometry(0.6, 6, 3))
+        // this.collision.scale.z = 1
+
+        const parentscale = this.parent?.scale;
+        // console.log(parentscale!);
+
+        // this.add(this.collision);
         this.name = params.name
+        // console.log(this.name)
     }
 }

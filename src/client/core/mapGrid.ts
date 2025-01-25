@@ -52,8 +52,6 @@ export class Forcefield extends Object3D {
         this.logicalPosition.y = y;
         this.radiusHelper.rotation.x = -Math.PI / 2
         this.centerHelper.rotation.x = -Math.PI / 2
-        this.add(this.radiusHelper);
-        this.add(this.centerHelper);
         this.centerHelper.scale.setScalar(0.1)
         this.centerHelper.position.y = 0.25
         this.centerHelper.material = new MeshBasicMaterial({
@@ -64,6 +62,8 @@ export class Forcefield extends Object3D {
             opacity: 0.5,
             transparent: true
         })
+        // this.add(this.radiusHelper);
+        this.add(this.centerHelper);
     }
 
     // quad interpolation:
@@ -99,7 +99,7 @@ export class Obstacle extends Object3D {
         super();
         this._collider = new Mesh(new BoxGeometry())
         const simpukka = AssetManager.getInstance().getTexture('simpukka1.png');
-        console.log(simpukka);
+        // console.log(simpukka);
         this._collider.material = new MeshBasicMaterial({
             map: simpukka
         });
