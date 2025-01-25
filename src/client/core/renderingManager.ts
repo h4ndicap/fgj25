@@ -56,6 +56,10 @@ export class RenderingManager implements IUpdateable {
         if (this._targetLevel) {
             this._cameraRig.targetVector.copy(this._targetLevel.player.worldTarget)
             this._targetLevel.player.setCameraLookat(this._cameraRig.camera.getWorldPosition(new Vector3()))
+            // Level.current.scene.traverse(ob => {
+            //     console.log(ob)
+            // })
+
             this._renderer.render(this._targetLevel.scene, this._cameraRig.camera);
         }
     }

@@ -1,10 +1,11 @@
-import { Color, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Scene, Vector3 } from "three";
+import { Color, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Scene, Sphere, Vector3 } from "three";
 import { Forcefield, MapGrid } from "./mapGrid";
 import { Player } from "./player";
 import { IUpdateable } from "./common";
 import { AssetManager } from "./assetManager";
-import { imageSizes } from "../imagefiles";
-import { BubbleGameMaterial } from "./bubbleGameMaterial";
+import { StaticItem } from "./staticItem";
+import { CleanableContructorParams, CleanableItem } from "./cleanableItem";
+import { cleanablePairs } from "../imagefiles";
 
 
 export class Level implements IUpdateable {
@@ -26,6 +27,8 @@ export class Level implements IUpdateable {
 
     private _groundBack = new Mesh(new PlaneGeometry())
 
+    private _cleanables: CleanableItem[] = [];
+
     private _player = new Player();
 
     get player() {
@@ -42,47 +45,41 @@ export class Level implements IUpdateable {
 
     addRandomPlants(files: string[], size: number, amount: 100) {
         for (let index = 0; index < amount; index++) {
-            const mesh = new Mesh(new PlaneGeometry())
-            this.add(mesh);
-            const randX = Math.random() * size - size / 2;
-            const randY = Math.random() * size - size / 2;
-            mesh.position.x = randX;
-            mesh.position.z = randY;
             // mesh.position.y = 0.5
 
             const pick = Math.random() * files.length;
             const texName = files[Math.floor(pick)];
-            // console.log(pick, files, texName)
-            const texture = AssetManager.getInstance().getTexture(texName)
-            mesh.material = new BubbleGameMaterial({
-                map: texture,
-                transparent: true
-            })
+            const randX = Math.random() * size - size / 2;
+            const randY = Math.random() * size - size / 2;
 
-            const imageInfo = imageSizes.get(texName);
-            // const ratio = texture?.image
-            // mesh.scale
-            // console.log(texture?.source);
-            if (imageInfo !== undefined) {
-                if (imageInfo.scale) {
-                    mesh.scale.copy(imageInfo?.scale)
-                }
-                mesh.scale.multiplyScalar(0.5 + Math.random() * 0.5)
-                if (imageInfo.rotation) {
-                    mesh.rotation.z = Math.random() * Math.PI
-                    mesh.rotation.x = -Math.PI / 2
-                }
-                if (imageInfo.offset) {
-                    mesh.position.add(imageInfo.offset)
-                }
-            } else {
-                mesh.position.y = 1
-            }
+            const object = new StaticItem(texName)
 
+            object.position.x = randX;
+            object.position.z = randY;
+            // object.rotation.y = Math.random()
+            this.scene.add(object)
         }
     }
 
-    // kind of annoying to create a jumbo constructor but it's just jamming
+    addRandomCleanables(objectNames: string[], size: number, amount: number) {
+        for (let index = 0; index < amount; index++) {
+            // mesh.position.y = 0.5
+
+            const roll = Math.random() * objectNames.length;
+            const paramPick = cleanablePairs[Math.floor(roll)];
+            const randX = Math.random() * size - size / 2;
+            const randY = Math.random() * size - size / 2;
+
+            const object = new CleanableItem(paramPick)
+
+            object.position.x = randX;
+            object.position.z = randY;
+            // object.rotation.y = Math.random()
+            this.scene.add(object)
+            this._cleanables.push(object);
+        }
+    }
+
     constructor(gridSize: number, obstacles: { x: number, y: number }[], forcefields: Forcefield[]) {
         this._groundGrid = new MapGrid(gridSize);
         this._scene.add(this._groundGrid);
@@ -107,7 +104,8 @@ export class Level implements IUpdateable {
         this._groundBack.scale.setScalar(gridSize)
         this.add(this._groundBack)
 
-        this.addRandomPlants(['kivikasvi.png', 'simpukka1.png', 'simpukka2.png', 'laulanen.png', 'likainenlautanen.png'], 20, 100)
+        this.addRandomPlants(['kivikasvi.png', 'simpukka1.png', 'simpukka2.png'], 20, 100)
+        this.addRandomCleanables(['plate'], 20, 20)
     }
 
 
@@ -117,6 +115,28 @@ export class Level implements IUpdateable {
 
         this._player.obstacles = this._groundGrid.obstacles;
         this._player.update(delta, timePassed);
+        this.updateForcefields();
+        this.applyCleaning(delta);
+    }
+
+    applyCleaning(delta: number) {
+        if (!this.player.cleaning) return;
+        const testSphere = new Sphere();
+        testSphere.radius = 0.5
+        const center = new Vector3();
+        this._cleanables.forEach(cleanable => {
+            cleanable.getWorldPosition(center);
+            // console.log(...center)
+            testSphere.center = center;
+            const inRange = testSphere.containsPoint(this.player.position)
+            if (inRange) {
+                // console.warn("CLEANING RANGE!")
+                cleanable.dirtiness -= delta;
+            }
+        });
+    }
+
+    updateForcefields() {
 
         this._groundGrid.forceFields.forEach(field => {
 
@@ -142,10 +162,6 @@ export class Level implements IUpdateable {
                     // console.warn("undershoot", positionAdjustment.length(), lengthToTarget)
                     this.player.position.add(positionAdjustment);
                 }
-
-                // console.log(...movement)
-
-
             }
         })
     }

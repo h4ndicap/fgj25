@@ -42,7 +42,7 @@ export class Player extends Object3D implements IUpdateable {
     deceleration = 0.25 * this._movementScaling;
 
     maxSpeed = 1 * this._movementScaling;
-    maxSpeedCleaning = 0.5 * this._movementScaling;
+    maxSpeedCleaning = 0.25 * this._movementScaling;
 
     floatHeight = 1;
 
@@ -93,6 +93,7 @@ export class Player extends Object3D implements IUpdateable {
         })
         this._shadow.scale.setScalar(0.35)
         this._shadow.scale.y = 0.2
+        this._shadow.position.y += 0.03
         this.add(this._shadow);
         // console.log("player");
         fromEvent<KeyboardEvent>(document, 'keydown').subscribe((key) => {
