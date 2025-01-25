@@ -1,5 +1,6 @@
 import { AxesHelper, BoxGeometry, CircleGeometry, Color, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Vector3, WireframeGeometry } from "three";
 import { AssetManager } from "./assetManager";
+import { BubbleGameMaterial } from "./bubbleGameMaterial";
 
 export class MapTile extends Object3D {
 
@@ -58,7 +59,7 @@ export class Forcefield extends Object3D {
         this.centerHelper.material = new MeshBasicMaterial({
             color: new Color(0, 0, 0)
         })
-        this.radiusHelper.material = new MeshBasicMaterial({
+        this.radiusHelper.material = new BubbleGameMaterial({
             color: new Color().setScalar(0.4),
             opacity: 0.5,
             transparent: true

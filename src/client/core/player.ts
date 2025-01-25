@@ -2,6 +2,7 @@ import { fromEvent } from "rxjs";
 import { CircleGeometry, Color, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Texture, Vector3 } from "three";
 import { IUpdateable } from "./common";
 import { RaycastManager } from "./raycastManager";
+import { BubbleGameMaterial } from "./bubbleGameMaterial";
 
 
 type InputAction = 'left' | 'right' | 'up' | 'down' | 'clean'
@@ -57,24 +58,26 @@ export class Player extends Object3D implements IUpdateable {
 
     constructor() {
         super();
+        // this.renderOrder = 1000;
         this.add(this._playerPivot);
         this._playerPivot.position.y = 1
         this._playerPivot.add(this._playerGraphicsContainer)
 
         const createPiece = (piece: CharacterPiece, offset = 0) => {
             const mesh = new Mesh(new PlaneGeometry());
-            const mat = new MeshBasicMaterial({
+            const mat = new BubbleGameMaterial({
                 transparent: true,
             });
             mesh.material = mat
             this._characterGraphics.set(piece, { mesh: mesh, material: mat })
             mesh.position.z = offset;
             this._playerGraphicsContainer.add(mesh)
+            // mesh.renderOrder = 10000; // difficult to make everything in the right order without traversal
         }
-        createPiece('arms', 0.1)
-        createPiece('body', -0.1)
+        createPiece('arms', 0.01)
+        createPiece('body', -0.01)
         createPiece('bubble')
-        createPiece('tail', -0.2)
+        createPiece('tail', -0.02)
 
         this._playerGraphicsContainer.scale.y = 3608 / 3000
 
@@ -83,7 +86,7 @@ export class Player extends Object3D implements IUpdateable {
         // this.add(this._playerGraphics);
 
         // this._shadow.rotateX(Math.PI / 2)
-        this._shadow.material = new MeshBasicMaterial({
+        this._shadow.material = new BubbleGameMaterial({
             opacity: 0.25,
             color: new Color(0, 0, 0),
             transparent: true
@@ -214,7 +217,7 @@ export class Player extends Object3D implements IUpdateable {
 
 
         const tail = this._characterGraphics.get('tail')!.mesh
-        tail.rotation.z = Math.cos(2 + _timePassed * 1.7) * 0.08;
+        tail.rotation.z = Math.cos(2 + _timePassed * 1.7) * 0.15;
         tail.rotation.y = Math.cos(2 + _timePassed * 1.7) * 0.08;
         tail.position.x = Math.sin(_timePassed) * 0.1 - 0.05;
     }

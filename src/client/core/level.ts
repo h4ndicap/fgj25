@@ -4,6 +4,7 @@ import { Player } from "./player";
 import { IUpdateable } from "./common";
 import { AssetManager } from "./assetManager";
 import { imageSizes } from "../imagefiles";
+import { BubbleGameMaterial } from "./bubbleGameMaterial";
 
 
 export class Level implements IUpdateable {
@@ -53,7 +54,7 @@ export class Level implements IUpdateable {
             const texName = files[Math.floor(pick)];
             // console.log(pick, files, texName)
             const texture = AssetManager.getInstance().getTexture(texName)
-            mesh.material = new MeshBasicMaterial({
+            mesh.material = new BubbleGameMaterial({
                 map: texture,
                 transparent: true
             })
@@ -106,7 +107,7 @@ export class Level implements IUpdateable {
         this._groundBack.scale.setScalar(gridSize)
         this.add(this._groundBack)
 
-        this.addRandomPlants(['kivikasvi.png', 'simpukka1.png', 'simpukka2.png'], 20, 100)
+        this.addRandomPlants(['kivikasvi.png', 'simpukka1.png', 'simpukka2.png', 'laulanen.png', 'likainenlautanen.png'], 20, 100)
     }
 
 
