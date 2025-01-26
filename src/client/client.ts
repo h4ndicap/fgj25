@@ -26,8 +26,8 @@ function initialize() {
     updateLoop();
 }
 
+const levels: Level[] = [];
 function startLevel() {
-    const levels: Level[] = [];
 
     const firstLevel = new Level(20, [
         { x: 8, y: 8 },
@@ -35,13 +35,13 @@ function startLevel() {
         { x: 8, y: 10 },
         { x: 8, y: 11 },
     ], [
-        new Forcefield(19, 0, -0.1, 15)
+        new Forcefield(10, 10, -0.1, 10)
     ])
 
     levels.push(firstLevel)
 
     // eslint-disable-next-line prefer-const
-    Level.current = levels[0];
+    Level.current = levels[levels.length - 1];
     const am = AssetManager.getInstance();
     Level.current.player.setTextures(am.getTexture('hahmo 4.png')!,
         am.getTexture('isokupla.png')!,
@@ -54,8 +54,17 @@ function startLevel() {
     RenderingManager.getInstance().level = Level.current;
 
     Level.current.gameStateChange$.subscribe(ev => {
-        console.log(ev);
+        console.log("client!", ev);
+        if (ev === 'drained') {
+            // startLevel();
+            unloadLevel();
+        }
     })
+}
+
+function unloadLevel() {
+    RenderingManager.getInstance().clearLevel()
+    Level.current = undefined;
 
 }
 

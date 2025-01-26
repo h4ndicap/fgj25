@@ -53,6 +53,9 @@ export class Player extends Object3D implements IUpdateable {
 
     collisionVelocityLoss = 0.5;
 
+    borderMinDistance = 10;
+    borderMaxDistance = 20;
+
 
     // flip this if the player loses control of the character, for transitions and animations and so
     controlEnabled = true;
@@ -221,6 +224,19 @@ export class Player extends Object3D implements IUpdateable {
             // const reflectionVector = 
         }
         if (this.controlEnabled) {
+            const borderDistanceTrap = MathUtils.clamp(MathUtils.inverseLerp(this.borderMinDistance, this.borderMaxDistance, this.position.clone().distanceTo(new Vector3())), 0, 1)
+            // console.log(borderDistanceTrap);
+            const directionToCenter = new Vector3().sub(this.position).normalize()
+            const centerDir = directionToCenter.dot(this._movementVector.clone().normalize())
+            // console.log("dot", dotProd)
+
+            // we are trying to leave the play area
+            // console.log(borderDistanceTrap);
+            if (borderDistanceTrap > 0 && centerDir < 0) {
+                // this._movementVector.setScalar(1 - borderDistanceTrap)
+                // console.log("GO BACK");
+                this._movementVector.add(directionToCenter.clone().multiplyScalar(borderDistanceTrap * delta))
+            }
             this.position.add(this._movementVector);
 
         }
@@ -282,6 +298,8 @@ export class Player extends Object3D implements IUpdateable {
 
         const dtAcc = delta * this.acceleration;
         const dtDec = delta * this.deceleration;
+
+        // if (borderDistanceTrap > 0){}
 
         if (this._inputsActive.has('left')) {
             if (this._movementVector.x > 0) {

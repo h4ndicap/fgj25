@@ -12,12 +12,12 @@ import { Subject } from "rxjs";
 
 export class Level implements IUpdateable {
 
-    private static _current: Level;
+    private static _current?: Level;
 
-    static set current(level: Level) {
+    static set current(level: Level | undefined) {
         this._current = level;
     }
-    static get current() {
+    static get current(): Level | undefined {
         return this._current;
     }
 
@@ -108,6 +108,8 @@ export class Level implements IUpdateable {
     constructor(gridSize: number, obstacles: { x: number, y: number }[], forcefields: Forcefield[]) {
         this._groundGrid = new MapGrid(gridSize);
         this._scene.add(this._groundGrid);
+        const playerStartpoint = new Vector3(Math.random(), 0, Math.random()).normalize().multiplyScalar(gridSize / 2)
+        this.player.position.copy(playerStartpoint);
         this._scene.add(this._player)
         this.scene.background = new Color().setScalar(0.3)
         this._groundGrid.setForcefields(forcefields);
@@ -125,7 +127,7 @@ export class Level implements IUpdateable {
         // this._groundBack.material.
         this._groundBack.rotation.x = -Math.PI / 2
         this._groundBack.position.y = -0.1
-        this._groundBack.scale.setScalar(gridSize)
+        this._groundBack.scale.setScalar(gridSize * 2)
         this.add(this._groundBack)
 
 
