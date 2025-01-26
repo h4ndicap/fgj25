@@ -1,5 +1,5 @@
 import { fromEvent } from "rxjs";
-import { CircleGeometry, Color, MathUtils, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Texture, Vector3 } from "three";
+import { AxesHelper, CircleGeometry, Color, MathUtils, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Texture, Vector3 } from "three";
 import { IUpdateable } from "./common";
 import { RaycastManager } from "./raycastManager";
 import { BubbleGameMaterial } from "./bubbleGameMaterial";
@@ -23,6 +23,10 @@ export class Player extends Object3D implements IUpdateable, IDrainable {
     private _playerGraphicsContainer = new Object3D();
     private _playerGraphicsOffset = new Vector3(0.12, 0.25, 0.01)
 
+    private tailPivotOffset = new Vector3(0.15, -0.15);
+    // private tailPivotOffset = new Vector3(0.55, -0.15);
+    private tailPivot = new Object3D();
+    private tailWagPhase = 0;
 
     private _characterGraphics: Map<CharacterPiece, { mesh: Mesh, material: MeshBasicMaterial }> = new Map();
 
@@ -134,6 +138,13 @@ export class Player extends Object3D implements IUpdateable, IDrainable {
         createPiece('bubble', 0, this.bubbleMaterial)
         createPiece('tail', -0.02)
 
+        const tail = this._characterGraphics.get('tail')!.mesh;
+        this._playerGraphicsContainer.add(this.tailPivot)
+        this.tailPivot.add(tail)
+        tail.position.x = -0.22
+        tail.position.y = 0.12
+
+
         // this.bubbleMaterial.color = new Color(0, 1, 0)
         this.cleaningAmount = 1;
 
@@ -242,7 +253,12 @@ export class Player extends Object3D implements IUpdateable, IDrainable {
                 // console.log("GO BACK");
                 this._movementVector.add(directionToCenter.clone().multiplyScalar(borderDistanceTrap * delta))
             }
+
+            // some wobble for fun
+            const noise = new Vector3(Math.sin(_timePassed * 2) * 0.1, 0, Math.sin(_timePassed * 2) * 0.05 + Math.cos(_timePassed) * 0.03).multiplyScalar(0.15)
+
             this.position.add(this._movementVector);
+            this.position.add(noise);
 
         }
 
@@ -288,15 +304,29 @@ export class Player extends Object3D implements IUpdateable, IDrainable {
         body.rotation.z = Math.cos(2 + _timePassed * 1.7) * 0.08;
         body.position.x = Math.sin(_timePassed) * 0.1 - 0.05;
 
+        this.tailPivot.position.copy(body.position).add(this.tailPivotOffset);
+        this.tailPivot.rotation.copy(body.rotation);
+
         arms.rotation.z = Math.cos(2 + _timePassed * 1.7) * 0.08;
         arms.rotation.z = Math.cos(2 + _timePassed * 1.7) * 0.08;
         arms.position.x = Math.sin(_timePassed) * 0.1 - 0.05;
 
 
-        const tail = this._characterGraphics.get('tail')!.mesh
-        tail.rotation.z = Math.cos(2 + _timePassed * 1.7) * 0.15;
-        tail.rotation.y = Math.cos(2 + _timePassed * 1.7) * 0.08;
-        tail.position.x = Math.sin(_timePassed) * 0.1 - 0.05;
+        // const tail = this._characterGraphics.get('tail')!.mesh
+        // tail.position.copy(this.tailPivot.position);
+        // tail.rotation.z = Math.cos(2 + _timePassed * 1.7) * 0.15;
+        // tail.rotation.y = Math.cos(2 + _timePassed * 1.7) * 0.08;
+        // tail.position.x = Math.sin(_timePassed) * 0.1 - 0.05;
+
+        this.tailWagPhase += delta * this._movementVector.length() * 500;
+        // this.tailPivot.rotation.z = Math.sin(this.tailWagPhase)
+        // console.log(this.tailWagPhase)
+        if (this.cleaning) {
+
+            this.tailPivot.rotation.z = -0.2 + Math.sin(_timePassed * 40) * 0.3
+        } else {
+            this.tailPivot.rotation.z = -0.3 + Math.sin(this.tailWagPhase) * 0.2
+        }
     }
 
     private updateMovementVector(delta: number) {
