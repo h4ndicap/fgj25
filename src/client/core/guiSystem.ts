@@ -169,8 +169,17 @@ export class GuiSystem implements IUpdateable {
         document.addEventListener('pointermove', this.onPointerMove);
         document.addEventListener('mousedown', () => {
             // console.log("nax ")
+
+
             if (this.activeAction !== undefined) {
-                this.uiAction$.next(this.activeAction);
+
+                this.startButtonScale = 0.5;
+                // yuck
+                setTimeout(() => {
+                    const lastAction = this.activeAction!;
+                    this.uiAction$.next(lastAction);
+                }, 250);
+
             }
 
         });

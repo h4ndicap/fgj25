@@ -1,5 +1,6 @@
 import { Object3D, Mesh, CircleGeometry, MeshBasicMaterial, Color, Vector3 } from "three";
 import { BubbleGameMaterial } from "./bubbleGameMaterial";
+import { StaticItem } from "./staticItem";
 
 export interface IDrainable {
     mass: number;
@@ -17,6 +18,8 @@ export class Forcefield extends Object3D {
     centerHelper = new Mesh(new CircleGeometry());
 
     logicalPosition: { x: number; y: number; } = { x: 0, y: 0 };
+
+    spinSpeed = 1;
 
     constructor(x: number, y: number, force = -0.07, range = 2.5) {
         super();
@@ -38,7 +41,8 @@ export class Forcefield extends Object3D {
             transparent: true
         });
         // this.add(this.radiusHelper);
-        this.add(this.centerHelper);
+        // this.add(this.centerHelper);
+        this.add(new StaticItem('hole.png'))
     }
 
     // quad interpolation:

@@ -61,7 +61,7 @@ export class MapGrid extends Object3D {
 
     constructor(size: number) {
         super();
-        this.add(new AxesHelper(3))
+        // this.add(new AxesHelper(3))
         for (let x = 0; x < size; x++) {
             // console.log(this.tiles[x])
             this.tiles[x] = [];

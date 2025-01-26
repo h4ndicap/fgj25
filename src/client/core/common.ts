@@ -1,3 +1,4 @@
+import { Vector3 } from "three"
 import { IDrainable } from "./drain"
 import { StaticItem } from "./staticItem"
 
@@ -10,6 +11,45 @@ export type GameState = 'start' | 'drained' | 'cleaned' | 'noescape'
 
 export class VortexBubble extends StaticItem implements IDrainable {
     mass: number = 0.5
+    ownSpeed: number = 0
+
+}
+
+export class EffectBubble extends StaticItem implements IUpdateable, IDrainable {
+    dying = false;
+    phase = 0;
+    speed = 1;
+
+    startPosition = new Vector3();
+    update(delta: number, timePassed: number): void {
+        this.phase += delta * this.speed;
+        // this._phase = Math.min(this._phase, 1)
+        if (this.phase > 1) {
+            this.phase = 0;
+            this.newPosition()
+            if (this.dying) {
+                this.parent?.remove(this);
+            }
+        }
+        this.mainMesh.position.y = 1 + this.phase * 2;
+        this.mainMaterial.opacity = 1 - this.phase
+    }
+
+    private newPosition() {
+        this.position.x = this.startPosition.x + Math.random() * 0.7 - 0.25;
+        this.position.z = this.startPosition.z + Math.random() * 0.7 - 0.25;
+
+    }
+
+    constructor() {
+        super('pikkukupla.png');
+        this.speed = 0.2 + Math.random() * 0.5
+        this.phase = Math.random();
+        this.newPosition();
+        this.rotation.x = -0.5
+        this.scale.setScalar(0.35 + Math.random() * 0.2)
+    }
+    mass: number = 0.7
     ownSpeed: number = 0
 
 }

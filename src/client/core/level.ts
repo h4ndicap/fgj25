@@ -9,6 +9,7 @@ import { CleanableItem } from "./cleanableItem";
 import { cleanablePairs } from "../imagefiles";
 import { BubbleGameMaterial } from "./bubbleGameMaterial";
 import { Subject } from "rxjs";
+import { time } from "console";
 
 
 export class Level implements IUpdateable {
@@ -184,13 +185,16 @@ export class Level implements IUpdateable {
 
         this._player.obstacles = this.obstacles;
         this._player.update(delta, timePassed);
-        this.updateForcefields();
+        this.updateForcefields(timePassed);
         this.applyCleaning(delta);
         this.checkForPickups();
         for (let index = 0; index < this._cleaningPickups.length; index++) {
             const element = this._cleaningPickups[index];
             element.update(delta, timePassed)
         }
+        this._cleanables.forEach(element => {
+            element.update(delta, timePassed)
+        });
     }
 
     applyCleaning(delta: number) {
@@ -255,12 +259,12 @@ export class Level implements IUpdateable {
 
 
 
-    applyForcefield(field: Forcefield, target: IDrainable): ForcefieldOutcome {
+    applyForcefield(field: Forcefield, target: IDrainable, time?: number): ForcefieldOutcome {
 
         const effectInfluence = field.getTargetMagnitude(target);
         let outcome: ForcefieldOutcome = "skipped"
+        // console.log(effectInfluence + " influence")
         if (effectInfluence > 0) {
-
             const fieldPos = field.getWorldPosition(new Vector3());
             const movement = new Vector3().subVectors(target.position, fieldPos);
             const lengthToTarget = movement.length();
@@ -287,7 +291,7 @@ export class Level implements IUpdateable {
 
 
 
-    updateForcefields() {
+    updateForcefields(time: number) {
 
         const playerOutcome = this.applyForcefield(this._centerDrain, this.player)
         // const playerOutcome: = 'noescape'
@@ -309,10 +313,18 @@ export class Level implements IUpdateable {
                 break;
         }
         this._vortexBubbles.forEach(element => {
-            const bubbleOutcome = this.applyForcefield(this._centerDrain, element)
+            const bubbleOutcome = this.applyForcefield(this._centerDrain, element, time)
             if (bubbleOutcome === "drained") {
                 const newStart = new Vector3(Math.random() - 0.5, 0, Math.random() - 0.5).normalize().multiplyScalar(7 + Math.random())
                 element.position.copy(newStart);
+            }
+            if (time !== undefined) {
+                // random wobbly
+                const rotationalX = Math.sin(time * 3) * 0.01
+                const rotationalY = Math.cos(time * 2) * 0.01
+                element.position.x += rotationalX;
+                element.position.z += rotationalY;
+                // console.log(rotationalX)
             }
             // center is zero so we can just grab the length
             const distanceToCenter = element.position.length()
@@ -320,6 +332,12 @@ export class Level implements IUpdateable {
             // element.position.y = 1 - (distancePhase * distancePhase)
             element.position.y = distancePhase
 
+        });
+
+        this._cleanables.forEach(cleanable => {
+            cleanable.bubblePool.forEach(bubble => {
+                // this.applyForcefield(this._centerDrain, bubble)
+            });
         });
         // this._centerDrain
     }
