@@ -9,10 +9,14 @@ export interface IUpdateable {
 export type GameState = 'start' | 'drained' | 'cleaned' | 'noescape'
 
 
-export class VortexBubble extends StaticItem implements IDrainable {
+export class VortexBubble extends StaticItem implements IDrainable, IUpdateable {
+    lifetime = 0;
+    update(delta: number, timePassed: number): void {
+        this.lifetime += delta * 0.2;
+        this.mainMaterial.opacity = Math.min(this.lifetime, 1);
+    }
     mass: number = 0.5
     ownSpeed: number = 0
-
 }
 
 export class EffectBubble extends StaticItem implements IUpdateable, IDrainable {

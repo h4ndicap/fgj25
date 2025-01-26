@@ -48,9 +48,21 @@ function startLevel() {
 
     Level.current.gameStateChange$.subscribe(ev => {
         console.log("client!", ev);
-        if (ev === 'drained') {
+        if (ev === 'drained' && Level.current?.levelState !== 'cleaned') {
             // startLevel();
             unloadLevel();
+            GuiSystem.changeState('gameover')
+            setTimeout(() => {
+                GuiSystem.changeState('mainmenu')
+            }, 4000);
+        }
+        if (ev === 'cleaned') {
+            // startLevel();
+            unloadLevel();
+            GuiSystem.changeState('victory')
+            setTimeout(() => {
+                GuiSystem.changeState('mainmenu')
+            }, 4000);
         }
     })
 }
@@ -64,7 +76,7 @@ function unloadLevel() {
 function updateLoop() {
     const delta = clock.getDelta()
     const elapsed = clock.getElapsedTime();
-    if (Level.current !== undefined) {
+    if (Level.current !== undefined && Level.current) {
         // console.log("update")
         Level.current.update(delta, elapsed)
     }

@@ -31,16 +31,25 @@ export class Level implements IUpdateable {
 
     private _groundBack = new Mesh(new PlaneGeometry())
     private _waterLayer = new Mesh(new PlaneGeometry())
+    private _waterStartOpacity = 0.7;
+    private _waterMaterial = new BubbleGameMaterial({
+        color: new Color(0xc9ac68),
+        transparent: true,
+        opacity: this._waterStartOpacity
+    })
+    private _waterOpacityTarget = this._waterStartOpacity;
 
     private _cleanables: CleanableItem[] = [];
     private _cleaningPickups: CleaningPickup[] = []
 
     private _centerDrain: Forcefield;
 
-    private _nextVortexBubbleIndex: number = 0;
-    private _vortexBubbles: IDrainable[] = []
+    private _vortexBubbles: VortexBubble[] = []
 
     private _levelstate: GameState = 'start';
+    get levelState() {
+        return this._levelstate;
+    }
     private _player = new Player();
 
     get player() {
@@ -152,19 +161,17 @@ export class Level implements IUpdateable {
         // try this later maybe?
         this._waterLayer.rotation.x = -Math.PI / 2
         this._waterLayer.position.y = 1
-        this._waterLayer.scale.setScalar(gridSize)
-        this._waterLayer.material = new BubbleGameMaterial({
-            color: new Color(0, 0, 1),
-            transparent: true,
-            opacity: 0.2
-        })
-        // this.add(this._waterLayer);
+        this._waterLayer.scale.setScalar(gridSize * 4)
+        this._waterLayer.material = this._waterMaterial
+        this.add(this._waterLayer);
+        this._waterLayer.renderOrder = 100;
 
         this.addRandomPlants(['kivikasvi.png', 'simpukka1.png', 'simpukka2.png'], 15, 200, easeOutCubic)
         this.addRandomPlants(['kivikasvi.png', 'simpukka1.png', 'simpukka2.png'], 13, 200, easeOutExpo)
         this.addRandomPlants(['kivikasvi.png', 'simpukka1.png', 'simpukka2.png'], 17, 100, easeOutCirc)
-        this.addRandomCleanables(['plate', 'spoon'], 10, 20, easeOutCubic)
-        this.addCleaningPickups(10, 10, easeOutCirc)
+        // this.addRandomCleanables(['plate', 'spoon'], 10, 20, easeOutCubic)
+        this.addRandomCleanables(['plate', 'spoon'], 10, 10, easeOutCubic)
+        this.addCleaningPickups(10, 3, easeOutCirc)
         this.createVortexBubbles(100, 7);
 
         this.obstacles.push(...this._groundGrid.obstacles)
@@ -195,6 +202,25 @@ export class Level implements IUpdateable {
         this._cleanables.forEach(element => {
             element.update(delta, timePassed)
         });
+        this._vortexBubbles.forEach(element => {
+            element.update(delta, timePassed)
+        });
+
+        this._waterMaterial.opacity = MathUtils.lerp(this._waterMaterial.opacity, this._waterOpacityTarget, 0.1)
+
+        if (this.levelState === "noescape" || this.levelState === 'cleaned') {
+            // console.log("NOOESCAPE")
+            const length = this.player.position.length()
+            if (length < 2) {
+                this.player.scale.setScalar(length / 2)
+            }
+        } else {
+            this.player.scale.setScalar(1);
+        }
+        if (this.levelState === "drained") {
+            this.player.visible = false;
+        }
+
     }
 
     applyCleaning(delta: number) {
@@ -220,12 +246,18 @@ export class Level implements IUpdateable {
                         // console.log("all cleaned");
                     }
                     console.log("dirty left", dirtyLeft);
+                    this._waterOpacityTarget = this._waterStartOpacity * dirtyLeft / this._cleanables.length
                     if (dirtyLeft <= 0) {
 
                         if (this._levelstate !== 'cleaned') {
                             // pla.position.copy(fieldPos)
                             this._levelstate = 'cleaned';
-                            this.gameStateChange$.next('cleaned')
+                            this.scene.remove(this._centerDrain);
+                            this._centerDrain = new Forcefield(10, 10, -0.1, 30)
+                            this.scene.add(this._centerDrain)
+                            setTimeout(() => {
+                                this.gameStateChange$.next('cleaned')
+                            }, 3000);
                             this.player.controlEnabled = false;
 
                         }
@@ -272,19 +304,21 @@ export class Level implements IUpdateable {
             // .multiplyScalar(effectInfluence * field.force * delta);
             const positionAdjustment = directionToTarget.clone().multiplyScalar(effectInfluence * field.force).divideScalar(target.mass)
 
-
-            if (positionAdjustment.length() > target.ownSpeed) {
-                outcome = 'noescape'
-            }
             // if we would fly over the centerpoint, clamp to it, add small epsilon
             if (positionAdjustment.length() > lengthToTarget) {
                 // console.error("OVERSHOOT")
                 outcome = 'drained'
-            } else {
-                // console.warn("undershoot", positionAdjustment.length(), lengthToTarget)
-                outcome = 'moved'
-                target.position.add(positionAdjustment);
-            }
+            } else
+                if (positionAdjustment.length() > target.ownSpeed) {
+                    target.position.add(positionAdjustment);
+                    return outcome = 'noescape'
+                    // if (target === this.player)
+                    //     console.log("NONE SHALL PASS", this.player)
+                } else {
+                    // console.warn("undershoot", positionAdjustment.length(), lengthToTarget)
+                    outcome = 'moved'
+                    target.position.add(positionAdjustment);
+                }
         }
         return outcome;
     }
@@ -298,15 +332,22 @@ export class Level implements IUpdateable {
         switch (playerOutcome) {
             case 'drained':
 
-                if (this._levelstate !== 'drained') {
+                if (this._levelstate !== 'drained' && this.levelState !== 'cleaned') {
                     // pla.position.copy(fieldPos)
+                    console.log("FAILFAILFAIL", this.levelState)
                     this._levelstate = 'drained';
-                    this.gameStateChange$.next('drained')
+                    setTimeout(() => {
+                        this.gameStateChange$.next('drained')
+                    }, 1500);
 
                 }
                 break;
 
             case 'noescape':
+                if (this._levelstate !== 'noescape' && this.levelState !== 'cleaned') {
+                    // pla.position.copy(fieldPos)
+                    this._levelstate = 'noescape';
+                }
                 // sound?
                 break;
             default:
@@ -317,6 +358,7 @@ export class Level implements IUpdateable {
             if (bubbleOutcome === "drained") {
                 const newStart = new Vector3(Math.random() - 0.5, 0, Math.random() - 0.5).normalize().multiplyScalar(7 + Math.random())
                 element.position.copy(newStart);
+                element.lifetime = 0;
             }
             if (time !== undefined) {
                 // random wobbly

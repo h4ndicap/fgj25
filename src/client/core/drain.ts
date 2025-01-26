@@ -42,7 +42,9 @@ export class Forcefield extends Object3D {
         });
         // this.add(this.radiusHelper);
         // this.add(this.centerHelper);
-        this.add(new StaticItem('hole.png'))
+        const hole = new StaticItem('hole.png')
+        hole.scale.z = 0.7
+        this.add(hole)
     }
 
     // quad interpolation:

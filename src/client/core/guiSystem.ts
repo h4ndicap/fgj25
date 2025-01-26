@@ -1,9 +1,10 @@
-import { Color, MathUtils, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneGeometry, Raycaster, Scene, Vector2 } from "three";
+import { Color, MathUtils, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneGeometry, Raycaster, Scene, Vector2, Vector3 } from "three";
 import { IUpdateable } from "./common";
 import { AssetManager } from "./assetManager";
 import { Subject } from "rxjs";
+import { StaticItem } from "./staticItem";
 
-export type UiState = 'mainmenu' | 'gamemenu'
+export type UiState = 'mainmenu' | 'gamemenu' | 'gameover' | 'victory'
 
 export type UiAction = 'start'
 
@@ -33,6 +34,8 @@ export class GuiSystem implements IUpdateable {
     private static startButtonScale = 1;
 
     private static mainMenuSet: Object3D[] = []
+    private static gameOverSet: Object3D[] = []
+    private static victorySet: Object3D[] = []
 
     private static activeAction: UiAction | undefined = undefined;
 
@@ -89,6 +92,130 @@ export class GuiSystem implements IUpdateable {
         this.instance = new GuiSystem();
         this.guiScene.add(this.orthoCam);
         this.guiScene.background = new Color(1, 1, 1)
+
+        // this._renderer.setSize(window.innerWidth, window.innerHeight)
+        // document.body.appendChild(this._renderer.domElement)
+        this.createMainmenu();
+        this.createGameOver();
+        this.createVictory();
+
+        this.changeState('mainmenu')
+
+        this.onWindowResize();
+        window.addEventListener('resize', this.onWindowResize);
+        document.addEventListener('pointermove', this.onPointerMove);
+        document.addEventListener('mousedown', () => {
+            // console.log("nax ")
+
+
+            if (this.activeAction !== undefined) {
+
+                this.startButtonScale = 0.5;
+                // yuck
+                setTimeout(() => {
+                    const lastAction = this.activeAction!;
+                    this.uiAction$.next(lastAction);
+                }, 250);
+
+            }
+
+        });
+
+        return this.instance;
+    }
+
+    private static createGameOver() {
+        const bgScale = 1712 / 1000
+        const mainMenuBackground = new Mesh(new PlaneGeometry());
+        mainMenuBackground.material = new MeshBasicMaterial({
+            map: AssetManager.getInstance().getTexture('gameokuva.png'),
+            transparent: true
+        })
+        mainMenuBackground.scale.setX(bgScale)
+        mainMenuBackground.position.z = -9
+
+        this.guiScene.add(mainMenuBackground)
+
+        // everything
+        this.gameOverSet.push(mainMenuBackground)
+
+    }
+
+
+    private static createVictory() {
+        const bgScale = 1712 / 1000
+        const mainMenuBackground = new Mesh(new PlaneGeometry());
+        mainMenuBackground.material = new MeshBasicMaterial({
+            map: AssetManager.getInstance().getTexture('hahmoalotusruutu1.png'),
+            transparent: true
+        })
+        mainMenuBackground.scale.setX(bgScale)
+        mainMenuBackground.position.z = -9
+
+
+        const victory = new StaticItem('VOITTORUUTU.png');
+        victory.position.z = -8
+        victory.scale.setScalar(0.2)
+        victory.position.y = 0.25
+        victory.position.x = 0.4
+        this.guiScene.add(victory);
+        this.victorySet.push(victory);
+
+
+        for (let index = 0; index < 10; index++) {
+            const plate = new StaticItem('laulanen.png');
+            plate.position.z = -5
+            plate.scale.x = 1.5
+            plate.scale.multiplyScalar(0.15)
+            plate.position.x = 0.05 + Math.random() * 0.8
+            plate.position.y = -0.45 + Math.random() * 0.1
+            plate.position.y += Math.abs(plate.position.x) * 0.1
+            plate.rotation.z = -0.7 + Math.random()
+            this.victorySet.push(plate)
+            this.guiScene.add(plate);
+        }
+
+
+        for (let index = 0; index < 10; index++) {
+            const spoon = new StaticItem('lusikka.png');
+            spoon.mainMesh.rotation.set(0, 0, 0)
+            // spoon.mainMesh.scale.set(0,0,0)
+            spoon.position.z = -5
+            spoon.scale.x = 1.5
+            spoon.scale.multiplyScalar(0.15)
+            spoon.position.x = 0.05 + Math.random() * 0.8
+            spoon.position.x = -spoon.position.x
+            spoon.position.y = -0.45 + Math.random() * 0.1
+            spoon.position.y += Math.abs(spoon.position.x) * 0.1
+            spoon.rotation.z = -0.7 + Math.random()
+            this.victorySet.push(spoon)
+            this.guiScene.add(spoon);
+        }
+
+        const cleaner = new StaticItem('pesuaine.png');
+        cleaner.position.z = -7
+        cleaner.scale.y = 2.5
+        cleaner.scale.multiplyScalar(1.3)
+        cleaner.mainMesh.position.copy(new Vector3())
+        // cleaner.scale.z = 0
+        cleaner.position.x = -0.4
+        // cleaner.position.x = 0.05 + Math.random() * 0.8
+        // cleaner.position.x = -cleaner.position.x
+        // cleaner.position.y = -0.25 + Math.random() * 0.1
+        // cleaner.position.y += Math.abs(cleaner.position.x) * 0.1
+        // cleaner.rotation.z = -0.7 + Math.random()
+        this.victorySet.push(cleaner)
+        this.guiScene.add(cleaner);
+
+
+        this.guiScene.add(mainMenuBackground)
+
+        // everything
+        this.victorySet.push(mainMenuBackground)
+
+    }
+
+    private static createMainmenu() {
 
         const bgScale = 1712 / 1000
         const mainMenuBackground = new Mesh(new PlaneGeometry());
@@ -159,32 +286,8 @@ export class GuiSystem implements IUpdateable {
         this.guiActions.set(this.startButton, 'start');
 
         // everything
-        this.mainMenuSet.push(mainMenuBackground, this.package, this.mainchar)
+        this.mainMenuSet.push(mainMenuBackground, this.package, this.mainchar, gamename, this.startButtonContainer)
 
-        // this._renderer.setSize(window.innerWidth, window.innerHeight)
-        // document.body.appendChild(this._renderer.domElement)
-
-        this.onWindowResize();
-        window.addEventListener('resize', this.onWindowResize);
-        document.addEventListener('pointermove', this.onPointerMove);
-        document.addEventListener('mousedown', () => {
-            // console.log("nax ")
-
-
-            if (this.activeAction !== undefined) {
-
-                this.startButtonScale = 0.5;
-                // yuck
-                setTimeout(() => {
-                    const lastAction = this.activeAction!;
-                    this.uiAction$.next(lastAction);
-                }, 250);
-
-            }
-
-        });
-
-        return this.instance;
     }
 
     private static onWindowResize() {
@@ -213,17 +316,33 @@ export class GuiSystem implements IUpdateable {
 
     static changeState(state: UiState) {
 
+        this.gameOverSet.forEach(menuItem => {
+            menuItem.visible = false
+        })
         this.mainMenuSet.forEach(menuItem => {
             menuItem.visible = false
         })
+        this.victorySet.forEach(menuItem => {
+            menuItem.visible = false
+        })
         switch (state) {
-            case "gamemenu":
+            case "gameover":
 
+                this.gameOverSet.forEach(menuItem => {
+                    menuItem.visible = true
+                })
                 break;
             case "mainmenu":
                 this.mainMenuSet.forEach(menuItem => {
                     menuItem.visible = true
                 })
+                break;
+            case 'victory':
+                console.log("VIC")
+                this.victorySet.forEach(menuItem => {
+                    menuItem.visible = true
+                })
+
                 break;
             default:
                 break;

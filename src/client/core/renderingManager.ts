@@ -29,6 +29,7 @@ export class RenderingManager implements IUpdateable {
         }
         this.instance = new RenderingManager();
 
+        this.instance._renderer.outputColorSpace = "srgb-linear"
         return this.instance;
     }
     // get level() {
