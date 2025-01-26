@@ -60,5 +60,9 @@ export class StaticItem extends Object3D {
             this.shadow.scale.copy(imageInfo.shadowSize)
         }
 
+        if (imageInfo.randomRotation !== undefined) {
+            this.mainMesh.rotation.z = Math.random() * Math.PI * imageInfo.randomRotation
+        }
+
     }
 }

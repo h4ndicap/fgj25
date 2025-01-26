@@ -1,4 +1,4 @@
-import { MathUtils, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneGeometry, Raycaster, Scene, Vector2 } from "three";
+import { Color, MathUtils, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneGeometry, Raycaster, Scene, Vector2 } from "three";
 import { IUpdateable } from "./common";
 import { AssetManager } from "./assetManager";
 import { Subject } from "rxjs";
@@ -45,7 +45,8 @@ export class GuiSystem implements IUpdateable {
         // console.log("lupdate")
         if (GuiSystem.pointer !== undefined) {
             GuiSystem.guiRaycaster.setFromCamera(GuiSystem.pointer, GuiSystem.orthoCam)
-            const intersects = GuiSystem.guiRaycaster.intersectObjects(GuiSystem.guiElements)
+            const activeElements = GuiSystem.guiElements.filter(x => x.visible);
+            const intersects = GuiSystem.guiRaycaster.intersectObjects(activeElements)
             if (intersects.length > 0) {
                 const action = GuiSystem.guiActions.get(intersects[0].object)
                 GuiSystem.activeAction = action;
@@ -87,6 +88,7 @@ export class GuiSystem implements IUpdateable {
         }
         this.instance = new GuiSystem();
         this.guiScene.add(this.orthoCam);
+        this.guiScene.background = new Color(1, 1, 1)
 
         const bgScale = 1712 / 1000
         const mainMenuBackground = new Mesh(new PlaneGeometry());

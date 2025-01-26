@@ -67,7 +67,7 @@ export class Level implements IUpdateable {
             const dist = easingFunction(Math.random()) * size + minDist
             const newCoordinate = new Vector3(Math.random() - 0.5, 0, Math.random() - 0.5).normalize()
             newCoordinate.multiplyScalar(dist)
-            console.log(dist, size)
+            // console.log(dist, size)
             object.position.copy(newCoordinate);
             // object.rotation.y = Math.random()
             this.scene.add(object)
@@ -125,8 +125,8 @@ export class Level implements IUpdateable {
     constructor(gridSize: number) {
         this._groundGrid = new MapGrid(gridSize);
         this._scene.add(this._groundGrid);
-        // const playerStartpoint = new Vector3(Math.random(), 0, Math.random()).normalize().multiplyScalar(gridSize / 2)
-        // this.player.position.copy(playerStartpoint);
+        const playerStartpoint = new Vector3(Math.random(), 0, Math.random()).normalize().multiplyScalar(gridSize / 1.5)
+        this.player.position.copy(playerStartpoint);
         this._scene.add(this._player)
         this.scene.background = new Color().setScalar(0.3)
         // this._groundGrid.setObstacles(obstacles);
@@ -164,7 +164,7 @@ export class Level implements IUpdateable {
         this.addRandomPlants(['kivikasvi.png', 'simpukka1.png', 'simpukka2.png'], 17, 100, easeOutCirc)
         this.addRandomCleanables(['plate', 'spoon'], 10, 20, easeOutCubic)
         this.addCleaningPickups(10, 10, easeOutCirc)
-        // this.createVortexBubbles(100, 7);
+        this.createVortexBubbles(100, 7);
 
         this.obstacles.push(...this._groundGrid.obstacles)
         this._cleanables.forEach(element => {
@@ -203,12 +203,31 @@ export class Level implements IUpdateable {
             // console.log(...center)
             testSphere.center = center;
             const inRange = testSphere.containsPoint(this.player.position)
-            if (inRange) {
+            if (inRange && !cleanable.isClean) {
                 const cleaningAmount = delta;
                 // console.warn("CLEANING RANGE!")
                 cleanable.dirtiness -= cleaningAmount;
                 this.player.cleaningAmount -= cleaningAmount * 0.25;
+                if (cleanable.isClean) {
+                    let dirtyLeft = 0;
+                    for (let index = 0; index < this._cleanables.length; index++) {
+                        const element = this._cleanables[index];
+                        dirtyLeft += element.isClean ? 0 : 1;
+                        // console.log("all cleaned");
+                    }
+                    console.log("dirty left", dirtyLeft);
+                    if (dirtyLeft <= 0) {
 
+                        if (this._levelstate !== 'cleaned') {
+                            // pla.position.copy(fieldPos)
+                            this._levelstate = 'cleaned';
+                            this.gameStateChange$.next('cleaned')
+                            this.player.controlEnabled = false;
+
+                        }
+                        // console.log("all cleaned");
+                    }
+                }
             }
         });
     }
@@ -270,25 +289,25 @@ export class Level implements IUpdateable {
 
     updateForcefields() {
 
-        // const playerOutcome = this.applyForcefield(this._centerDrain, this.player)
-        // // const playerOutcome: = 'noescape'
-        // switch (playerOutcome) {
-        //     case 'drained':
+        const playerOutcome = this.applyForcefield(this._centerDrain, this.player)
+        // const playerOutcome: = 'noescape'
+        switch (playerOutcome) {
+            case 'drained':
 
-        //         if (this._levelstate !== 'drained') {
-        //             // pla.position.copy(fieldPos)
-        //             this._levelstate = 'drained';
-        //             this.gameStateChange$.next('drained')
+                if (this._levelstate !== 'drained') {
+                    // pla.position.copy(fieldPos)
+                    this._levelstate = 'drained';
+                    this.gameStateChange$.next('drained')
 
-        //         }
-        //         break;
+                }
+                break;
 
-        //     case 'noescape':
-        //         // sound?
-        //         break;
-        //     default:
-        //         break;
-        // }
+            case 'noescape':
+                // sound?
+                break;
+            default:
+                break;
+        }
         this._vortexBubbles.forEach(element => {
             const bubbleOutcome = this.applyForcefield(this._centerDrain, element)
             if (bubbleOutcome === "drained") {
