@@ -24,6 +24,7 @@ export const imageFiles: string[] = [
     'hahmoalotusruutu2.png',
     'pelinnimi.png',
     'playbutton.png',
+    'pikkukupla.png',
     // 'hahmoalotusruutu3.png'
 ]
 
@@ -42,7 +43,8 @@ imageSizes.set('kivikasvi.png', { scale: new Vector3().set(836 / 1411, 1, 1), of
 imageSizes.set('laulanen.png', { scale: new Vector3().set(1, 1, 1), offset: new Vector3(0, 0.4, 0), shadowSize: new Vector3(0.3, 0.1, 0.1) })
 imageSizes.set('likainenlautanen.png', { scale: new Vector3().set(1, 1, 1), offset: new Vector3(0, 0.4, 0), shadowSize: new Vector3(0.3, 0.1, 0.1) })
 imageSizes.set('lusikkalikainen.png', { scale: new Vector3().set(1, 300 / 200, 1), rotation: new Euler(-Math.PI / 2), offset: new Vector3(0, 0.0, 0), shadowSize: new Vector3(0.0, 0.0, 0.0) })
-imageSizes.set('pesuaine.png', { scale: new Vector3().set(0.5, 787 / 579 * 0.5, 0.5), offset: new Vector3(0, 0.75, 0), shadowSize: new Vector3(0.2, 0.2, 0.2) })
+imageSizes.set('pesuaine.png', { scale: new Vector3().set(0.5, 787 / 579 * 0.5, 0.5), rotation: new Euler(-1.2), offset: new Vector3(0, 0.75, 0), shadowSize: new Vector3(0.2, 0.2, 0.2) })
+imageSizes.set('pikkukupla.png', { scale: new Vector3().set(0.5, 200 / 194 * 0.5, 0.5), offset: new Vector3(0, 0.75, 0), shadowSize: new Vector3(0.0, 0.0, 0.0) })
 // imageSizes.set('simpukka2.png', new Vector3().setScalar(0.5))
 // imageSizes.set('kivikasvi.png', new Vector3().setScalar(0.5))
 

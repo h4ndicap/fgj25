@@ -1,7 +1,8 @@
-import { Color, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Scene, Sphere, Vector3 } from "three";
-import { Forcefield, MapGrid } from "./mapGrid";
+import { Color, MathUtils, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Scene, Sphere, Vector3 } from "three";
+import { MapGrid } from "./mapGrid";
+import { Forcefield, ForcefieldOutcome, IDrainable } from "./drain";
 import { Player } from "./player";
-import { GameState, IUpdateable } from "./common";
+import { CleaningPickup, easeInQuint, easeOutCirc, easeOutCubic, easeOutExpo, easeOutSine, GameState, IUpdateable, VortexBubble } from "./common";
 import { AssetManager } from "./assetManager";
 import { StaticItem } from "./staticItem";
 import { CleanableItem } from "./cleanableItem";
@@ -31,7 +32,12 @@ export class Level implements IUpdateable {
     private _waterLayer = new Mesh(new PlaneGeometry())
 
     private _cleanables: CleanableItem[] = [];
-    private _cleaningPickups: StaticItem[] = []
+    private _cleaningPickups: CleaningPickup[] = []
+
+    private _centerDrain: Forcefield;
+
+    private _nextVortexBubbleIndex: number = 0;
+    private _vortexBubbles: IDrainable[] = []
 
     private _levelstate: GameState = 'start';
     private _player = new Player();
@@ -51,68 +57,78 @@ export class Level implements IUpdateable {
 
     gameStateChange$: Subject<GameState> = new Subject<GameState>();
 
-    addRandomPlants(files: string[], size: number, amount: number) {
+    addRandomPlants(files: string[], size: number, amount: number, easingFunction: (t: number) => number, minDist = 2) {
         for (let index = 0; index < amount; index++) {
             // mesh.position.y = 0.5
 
             const pick = Math.random() * files.length;
             const texName = files[Math.floor(pick)];
-            const randX = Math.random() * size - size / 2;
-            const randY = Math.random() * size - size / 2;
-
             const object = new StaticItem(texName)
-
-            object.position.x = randX;
-            object.position.z = randY;
+            const dist = easingFunction(Math.random()) * size + minDist
+            const newCoordinate = new Vector3(Math.random() - 0.5, 0, Math.random() - 0.5).normalize()
+            newCoordinate.multiplyScalar(dist)
+            console.log(dist, size)
+            object.position.copy(newCoordinate);
             // object.rotation.y = Math.random()
             this.scene.add(object)
         }
     }
 
-    addCleaningPickups(size: number, amount: number) {
+    addCleaningPickups(size: number, amount: number, easingFunction: (t: number) => number) {
         for (let index = 0; index < amount; index++) {
             // mesh.position.y = 0.5
 
-            const randX = Math.random() * size - size / 2;
-            const randY = Math.random() * size - size / 2;
+            const object = new CleaningPickup('pesuaine.png')
 
-            const object = new StaticItem('pesuaine.png')
+            const dist = easingFunction(Math.random()) * (size - 4) + 3
+            const newCoordinate = new Vector3(Math.random() - 0.5, 0, Math.random() - 0.5).normalize().multiplyScalar(dist)
+            object.position.copy(newCoordinate);
 
-            object.position.x = randX;
-            object.position.z = randY;
             // object.rotation.y = Math.random()
             this.scene.add(object)
             this._cleaningPickups.push(object)
         }
     }
 
-    addRandomCleanables(objectNames: string[], size: number, amount: number) {
+    addRandomCleanables(objectNames: string[], size: number, amount: number, easingFunction: (t: number) => number) {
         for (let index = 0; index < amount; index++) {
             // mesh.position.y = 0.5
 
             const roll = Math.random() * objectNames.length;
             const paramPick = cleanablePairs[Math.floor(roll)];
-            const randX = Math.random() * size - size / 2;
-            const randY = Math.random() * size - size / 2;
 
             const object = new CleanableItem(paramPick)
 
-            object.position.x = randX;
-            object.position.z = randY;
+            const dist = easingFunction(Math.random()) * (size - 2) + 2
+            const newCoordinate = new Vector3(Math.random() - 0.5, 0, Math.random() - 0.5).normalize().multiplyScalar(dist)
+            object.position.copy(newCoordinate);
             // object.rotation.y = Math.random()
             this.scene.add(object)
             this._cleanables.push(object);
         }
     }
 
-    constructor(gridSize: number, obstacles: { x: number, y: number }[], forcefields: Forcefield[]) {
+    createVortexBubbles(poolSize: number, spawnDistance: number) {
+        for (let index = 0; index < poolSize; index++) {
+            const newBubble = new VortexBubble('pikkukupla.png')
+            const newCoordinate = new Vector3(Math.random() - 0.5, 0, Math.random() - 0.5).normalize().multiplyScalar(Math.random() * spawnDistance)
+            newBubble.position.copy(newCoordinate);
+            newBubble.rotation.x = -1
+            const bubbleSize = 0.2 + Math.random() * 0.8
+            newBubble.scale.multiplyScalar(bubbleSize)
+            newBubble.mass = 0.1 + bubbleSize
+            this.scene.add(newBubble);
+            this._vortexBubbles.push(newBubble);
+        }
+    }
+
+    constructor(gridSize: number) {
         this._groundGrid = new MapGrid(gridSize);
         this._scene.add(this._groundGrid);
-        const playerStartpoint = new Vector3(Math.random(), 0, Math.random()).normalize().multiplyScalar(gridSize / 2)
-        this.player.position.copy(playerStartpoint);
+        // const playerStartpoint = new Vector3(Math.random(), 0, Math.random()).normalize().multiplyScalar(gridSize / 2)
+        // this.player.position.copy(playerStartpoint);
         this._scene.add(this._player)
         this.scene.background = new Color().setScalar(0.3)
-        this._groundGrid.setForcefields(forcefields);
         // this._groundGrid.setObstacles(obstacles);
 
         const groundTex = AssetManager.getInstance().getTexture('maa.png')
@@ -143,9 +159,12 @@ export class Level implements IUpdateable {
         })
         // this.add(this._waterLayer);
 
-        this.addRandomPlants(['kivikasvi.png', 'simpukka1.png', 'simpukka2.png'], 20, 200)
-        this.addRandomCleanables(['plate', 'spoon'], 20, 20)
-        this.addCleaningPickups(20, 10)
+        this.addRandomPlants(['kivikasvi.png', 'simpukka1.png', 'simpukka2.png'], 15, 200, easeOutCubic)
+        this.addRandomPlants(['kivikasvi.png', 'simpukka1.png', 'simpukka2.png'], 13, 200, easeOutExpo)
+        this.addRandomPlants(['kivikasvi.png', 'simpukka1.png', 'simpukka2.png'], 17, 100, easeOutCirc)
+        this.addRandomCleanables(['plate', 'spoon'], 10, 20, easeOutCubic)
+        this.addCleaningPickups(10, 10, easeOutCirc)
+        // this.createVortexBubbles(100, 7);
 
         this.obstacles.push(...this._groundGrid.obstacles)
         this._cleanables.forEach(element => {
@@ -154,6 +173,9 @@ export class Level implements IUpdateable {
             }
         });
         this.obstacles.push(...this._groundGrid.obstacles)
+
+        this._centerDrain = new Forcefield(10, 10, -0.1, 10)
+        this.scene.add(this._centerDrain)
         this.gameStateChange$.next('start')
 
     }
@@ -165,6 +187,10 @@ export class Level implements IUpdateable {
         this.updateForcefields();
         this.applyCleaning(delta);
         this.checkForPickups();
+        for (let index = 0; index < this._cleaningPickups.length; index++) {
+            const element = this._cleaningPickups[index];
+            element.update(delta, timePassed)
+        }
     }
 
     applyCleaning(delta: number) {
@@ -208,45 +234,74 @@ export class Level implements IUpdateable {
         }
     }
 
-    updateForcefields() {
-
-        this._groundGrid.forceFields.forEach(field => {
-
-            const effectInfluence = field.getTargetMagnitude(this.player);
-            if (effectInfluence > 0) {
-
-                const targetPos = field.getWorldPosition(new Vector3());
-                const movement = new Vector3().subVectors(this.player.position, targetPos);
-                const lengthToTarget = movement.length();
-                const directionToTarget = movement.normalize()
-                // .multiplyScalar(effectInfluence * field.force * delta);
-                const positionAdjustment = directionToTarget.clone().multiplyScalar(effectInfluence * field.force)
 
 
-                if (positionAdjustment.length() > this.player.maxSpeed) {
-                    // console.error("YOU WENT DOWN THE DRAIN! :(")
-                    // this.player.controlEnabled = false;
-                    // if (this.gameStateChange$.)
-                    if (this._levelstate !== 'drained' && this._levelstate !== 'noescape') {
-                        this._levelstate = 'noescape';
-                        this.gameStateChange$.next('noescape')
-                    }
-                }
-                // if we would fly over the centerpoint, clamp to it, add small epsilon
-                if (positionAdjustment.length() > lengthToTarget) {
-                    // console.error("OVERSHOOT")
-                    if (this._levelstate !== 'drained') {
-                        this.player.position.copy(targetPos)
-                        this._levelstate = 'drained';
-                        this.gameStateChange$.next('drained')
+    applyForcefield(field: Forcefield, target: IDrainable): ForcefieldOutcome {
 
-                    }
-                } else {
-                    // console.warn("undershoot", positionAdjustment.length(), lengthToTarget)
-                    this.player.position.add(positionAdjustment);
-                }
+        const effectInfluence = field.getTargetMagnitude(target);
+        let outcome: ForcefieldOutcome = "skipped"
+        if (effectInfluence > 0) {
+
+            const fieldPos = field.getWorldPosition(new Vector3());
+            const movement = new Vector3().subVectors(target.position, fieldPos);
+            const lengthToTarget = movement.length();
+            const directionToTarget = movement.normalize()
+            // .multiplyScalar(effectInfluence * field.force * delta);
+            const positionAdjustment = directionToTarget.clone().multiplyScalar(effectInfluence * field.force).divideScalar(target.mass)
+
+
+            if (positionAdjustment.length() > target.ownSpeed) {
+                outcome = 'noescape'
             }
-        })
+            // if we would fly over the centerpoint, clamp to it, add small epsilon
+            if (positionAdjustment.length() > lengthToTarget) {
+                // console.error("OVERSHOOT")
+                outcome = 'drained'
+            } else {
+                // console.warn("undershoot", positionAdjustment.length(), lengthToTarget)
+                outcome = 'moved'
+                target.position.add(positionAdjustment);
+            }
+        }
+        return outcome;
     }
 
+
+
+    updateForcefields() {
+
+        // const playerOutcome = this.applyForcefield(this._centerDrain, this.player)
+        // // const playerOutcome: = 'noescape'
+        // switch (playerOutcome) {
+        //     case 'drained':
+
+        //         if (this._levelstate !== 'drained') {
+        //             // pla.position.copy(fieldPos)
+        //             this._levelstate = 'drained';
+        //             this.gameStateChange$.next('drained')
+
+        //         }
+        //         break;
+
+        //     case 'noescape':
+        //         // sound?
+        //         break;
+        //     default:
+        //         break;
+        // }
+        this._vortexBubbles.forEach(element => {
+            const bubbleOutcome = this.applyForcefield(this._centerDrain, element)
+            if (bubbleOutcome === "drained") {
+                const newStart = new Vector3(Math.random() - 0.5, 0, Math.random() - 0.5).normalize().multiplyScalar(7 + Math.random())
+                element.position.copy(newStart);
+            }
+            // center is zero so we can just grab the length
+            const distanceToCenter = element.position.length()
+            const distancePhase = MathUtils.lerp(0, 0.7, distanceToCenter / 10);
+            // element.position.y = 1 - (distancePhase * distancePhase)
+            element.position.y = distancePhase
+
+        });
+        // this._centerDrain
+    }
 }

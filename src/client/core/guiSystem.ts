@@ -1,4 +1,4 @@
-import { BoxGeometry, Color, MathUtils, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneGeometry, Raycaster, Scene, Vector2 } from "three";
+import { MathUtils, Mesh, MeshBasicMaterial, Object3D, OrthographicCamera, PlaneGeometry, Raycaster, Scene, Vector2 } from "three";
 import { IUpdateable } from "./common";
 import { AssetManager } from "./assetManager";
 import { Subject } from "rxjs";

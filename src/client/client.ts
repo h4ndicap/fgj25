@@ -4,7 +4,7 @@ import { Level } from './core/level';
 import { AssetManager } from './core/assetManager';
 import { imageFiles } from './imagefiles';
 import { RaycastManager } from './core/raycastManager';
-import { Forcefield } from './core/mapGrid';
+import { Forcefield } from "./core/drain";
 import { GuiSystem } from './core/guiSystem';
 
 // const scene = new THREE.Scene()
@@ -29,14 +29,7 @@ function initialize() {
 const levels: Level[] = [];
 function startLevel() {
 
-    const firstLevel = new Level(20, [
-        { x: 8, y: 8 },
-        { x: 8, y: 9 },
-        { x: 8, y: 10 },
-        { x: 8, y: 11 },
-    ], [
-        new Forcefield(10, 10, -0.1, 10)
-    ])
+    const firstLevel = new Level(20)
 
     levels.push(firstLevel)
 

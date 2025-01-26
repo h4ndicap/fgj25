@@ -1,6 +1,5 @@
-import { AxesHelper, BoxGeometry, CircleGeometry, Color, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, Vector3, WireframeGeometry } from "three";
+import { AxesHelper, BoxGeometry, Color, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry, WireframeGeometry } from "three";
 import { AssetManager } from "./assetManager";
-import { BubbleGameMaterial } from "./bubbleGameMaterial";
 
 export class MapTile extends Object3D {
 
@@ -33,60 +32,6 @@ export class MapTile extends Object3D {
         // this.add(this._ground)
     }
 }
-
-export class Forcefield extends Object3D {
-    force: number = -0.07;
-    range: number = 5;
-
-    radiusHelper = new Mesh(new CircleGeometry())
-    centerHelper = new Mesh(new CircleGeometry())
-
-    logicalPosition: { x: number, y: number } = { x: 0, y: 0 }
-
-    constructor(x: number, y: number, force = -0.07, range = 2.5) {
-        super();
-        this.force = force;
-        this.range = range
-        this.radiusHelper.scale.setScalar(this.range);
-        this.logicalPosition.x = x;
-        this.logicalPosition.y = y;
-        this.radiusHelper.rotation.x = -Math.PI / 2
-        this.centerHelper.rotation.x = -Math.PI / 2
-        this.centerHelper.scale.setScalar(0.1)
-        this.centerHelper.position.y = 0.25
-        this.centerHelper.material = new MeshBasicMaterial({
-            color: new Color(0, 0, 0)
-        })
-        this.radiusHelper.material = new BubbleGameMaterial({
-            color: new Color().setScalar(0.4),
-            opacity: 0.5,
-            transparent: true
-        })
-        // this.add(this.radiusHelper);
-        this.add(this.centerHelper);
-    }
-
-    // quad interpolation:
-    private interpolate(t: number) {
-        // return t * t;
-        return t * t
-    }
-
-    getTargetMagnitude(target: Object3D) {
-        const targetWorld = target.getWorldPosition(new Vector3())
-        const thisWorld = this.getWorldPosition(new Vector3())
-        const distance = targetWorld.distanceTo(thisWorld)
-
-        if (distance <= 0) { return 1 }
-        if (distance < this.range) {
-            return this.interpolate((1 - distance / this.range))
-        } else {
-            return 0;
-        }
-        // if (distance > this.range) return 0;
-        // console.log("affecting", distance, this.range);
-    }
-}
 export class Obstacle extends Object3D {
 
     private _collider;
@@ -114,8 +59,6 @@ export class MapGrid extends Object3D {
     tiles: MapTile[][] = []
     obstacles: Object3D[] = [];
 
-    forceFields: Forcefield[] = [];
-
     constructor(size: number) {
         super();
         this.add(new AxesHelper(3))
@@ -141,23 +84,6 @@ export class MapGrid extends Object3D {
             this.obstacles.push(newObstacle);
         });
     }
-
-    setForcefields(forceFields: Forcefield[]) {
-        forceFields.forEach(element => {
-            try {
-                const targetTile = this.tiles[element.logicalPosition.x][element.logicalPosition.y]
-                targetTile.add(element)
-                this.forceFields.push(element);
-
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            } catch (error) {
-                console.error("Can't find tile for forcefield", element.logicalPosition)
-            }
-            // newObstacle.position.x = element.x;
-            // newObstacle.position.z = element.y;
-        });
-    }
-
 
     getTile(x: number, y: number) {
         return this.tiles[x][y];

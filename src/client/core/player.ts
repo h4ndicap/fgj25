@@ -3,13 +3,14 @@ import { CircleGeometry, Color, MathUtils, Mesh, MeshBasicMaterial, Object3D, Pl
 import { IUpdateable } from "./common";
 import { RaycastManager } from "./raycastManager";
 import { BubbleGameMaterial } from "./bubbleGameMaterial";
+import { IDrainable } from "./drain";
 
 
 type InputAction = 'left' | 'right' | 'up' | 'down' | 'clean'
 
 type CharacterPiece = 'body' | 'bubble' | 'arms' | 'tail'
 
-export class Player extends Object3D implements IUpdateable {
+export class Player extends Object3D implements IUpdateable, IDrainable {
 
     private _inputsActive = new Set<InputAction>()
 
@@ -56,6 +57,8 @@ export class Player extends Object3D implements IUpdateable {
     borderMinDistance = 10;
     borderMaxDistance = 20;
 
+    ownSpeed = this.maxSpeed;
+
 
     // flip this if the player loses control of the character, for transitions and animations and so
     controlEnabled = true;
@@ -76,6 +79,7 @@ export class Player extends Object3D implements IUpdateable {
                 body.material.map = this._neutralExperssion;
             }
         }
+        this.mass = this.cleaning ? 2 : 1
 
     }
 
@@ -199,6 +203,7 @@ export class Player extends Object3D implements IUpdateable {
             }
         })
     }
+    mass: number = 1;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     update(delta: number, _timePassed: number): void {
 
